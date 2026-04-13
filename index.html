@@ -1,0 +1,2700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Houston Sand & Gravel — Vendor Map v5</title>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAo3YEl_OOGOPN_-lk2BOQGy3f1dnoaFr8&libraries=places,geometry&callback=initMap" async defer></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+
+/* ── DARK THEME (default) ── */
+:root {
+  --bg:#0a0e14; --surface:#111720; --surface2:#171e2a; --surface3:#1c2433;
+  --border:#232d3d; --border2:#2c3a4f;
+  --text:#e2e8f0; --text2:#c8d1dc; --muted:#6b7a8d; --muted2:#4a5568;
+  --accent:#f0a030; --accent2:#e09020; --accent-glow:rgba(240,160,48,.12);
+  --green:#34d399; --green-bg:rgba(52,211,153,.08); --green-border:rgba(52,211,153,.25);
+  --red:#f87171; --red-bg:rgba(248,113,113,.08); --red-border:rgba(248,113,113,.25);
+  --blue:#60a5fa; --blue-bg:rgba(96,165,250,.08); --blue-border:rgba(96,165,250,.25);
+  --purple:#a78bfa; --purple-bg:rgba(167,139,250,.08);
+  --shadow:rgba(0,0,0,.5); --input-bg:#0d1219;
+  --radius:8px; --radius-lg:12px;
+  --mono:'JetBrains Mono',monospace;
+  --sans:'DM Sans',sans-serif;
+  --transition:all .2s cubic-bezier(.4,0,.2,1);
+}
+
+/* ── LIGHT THEME ── */
+html.light {
+  --bg:#f0f2f6; --surface:#ffffff; --surface2:#f7f8fb; --surface3:#eef0f5;
+  --border:#dde1ea; --border2:#cdd3df;
+  --text:#1a202c; --text2:#2d3748; --muted:#718096; --muted2:#a0aec0;
+  --accent:#d48a18; --accent2:#c07a10; --accent-glow:rgba(212,138,24,.1);
+  --green:#059669; --green-bg:rgba(5,150,105,.06); --green-border:rgba(5,150,105,.2);
+  --red:#dc2626; --red-bg:rgba(220,38,38,.06); --red-border:rgba(220,38,38,.2);
+  --blue:#2563eb; --blue-bg:rgba(37,99,235,.06); --blue-border:rgba(37,99,235,.2);
+  --purple:#7c3aed; --purple-bg:rgba(124,58,237,.06);
+  --shadow:rgba(0,0,0,.08); --input-bg:#fff;
+}
+
+/* ── RESET ── */
+*{box-sizing:border-box;margin:0;padding:0;}
+html{height:100%;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);height:100%;min-height:100vh;display:flex;flex-direction:column;overflow:hidden;-webkit-font-smoothing:antialiased;}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px;}
+::-webkit-scrollbar-thumb:hover{background:var(--muted2);}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes scaleIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+.fade-in{animation:fadeIn .3s ease both;}
+.slide-up{animation:slideUp .4s ease both;}
+
+/* ── HEADER ── */
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;display:flex;align-items:center;height:54px;flex-shrink:0;z-index:200;gap:12px;}
+.logo{font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.12em;color:var(--accent);text-transform:uppercase;white-space:nowrap;display:flex;align-items:center;gap:8px;}
+.logo-icon{width:30px;height:30px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:15px;color:#0a0e14;font-weight:700;}
+.logo span{color:var(--muted);font-weight:400;letter-spacing:.06em;}
+.header-center{display:flex;gap:2px;flex:1;justify-content:center;}
+.htab{background:transparent;border:1px solid transparent;color:var(--muted);font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.06em;padding:8px 16px;border-radius:6px;cursor:pointer;transition:var(--transition);white-space:nowrap;position:relative;}
+.htab:hover{color:var(--text);background:var(--surface2);}
+.htab.active{background:var(--accent);color:#0a0e14;font-weight:700;box-shadow:0 2px 8px rgba(240,160,48,.25);}
+.htab .tab-badge{position:absolute;top:-4px;right:-4px;width:17px;height:17px;background:var(--red);color:#fff;font-size:9px;font-weight:700;border-radius:50%;display:flex;align-items:center;justify-content:center;display:none;}
+.header-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.legend{display:flex;gap:8px;flex-wrap:wrap;}
+.li{display:flex;align-items:center;gap:4px;font-size:10px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;}
+.ld{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.theme-toggle{background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-size:15px;width:32px;height:32px;border-radius:var(--radius);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:var(--transition);flex-shrink:0;}
+.theme-toggle:hover{border-color:var(--accent);color:var(--accent);}
+
+/* ── LAYOUT ── */
+.main{display:flex;overflow:hidden;flex:1 1 0;min-height:0;}
+.sidebar{width:420px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;min-height:0;z-index:50;}
+.panel{display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0;}
+.panel.active{display:flex;}
+
+/* ── FORM ELEMENTS ── */
+.section{padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.section-label{font-size:11px;font-family:var(--mono);color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.section-label .sl-icon{font-size:14px;}
+.field{margin-bottom:10px;}.field:last-child{margin-bottom:0;}
+.field label{display:block;font-size:11px;color:var(--muted);margin-bottom:5px;font-family:var(--mono);letter-spacing:.06em;text-transform:uppercase;}
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
+input[type="number"]{-moz-appearance:textfield;}
+input[type="text"],input[type="number"],select{
+  width:100%;background:var(--input-bg);border:1px solid var(--border);color:var(--text);
+  padding:10px 14px;font-size:14px;font-family:var(--sans);border-radius:var(--radius);
+  outline:none;transition:var(--transition);appearance:none;-webkit-appearance:none;
+}
+input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow);}
+input::placeholder{color:var(--muted2);}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7a8d' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:30px;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+
+/* ── TOGGLES ── */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;}
+.toggle-label{font-size:12px;color:var(--text2);}
+.toggle-label small{display:block;font-size:10px;color:var(--muted);margin-top:2px;}
+.toggle{position:relative;width:38px;height:20px;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;}
+.toggle-slider{position:absolute;inset:0;background:var(--border2);border-radius:20px;cursor:pointer;transition:var(--transition);}
+.toggle-slider:before{content:'';position:absolute;width:14px;height:14px;left:3px;top:3px;background:var(--muted);border-radius:50%;transition:var(--transition);}
+.toggle input:checked+.toggle-slider{background:var(--accent);}
+.toggle input:checked+.toggle-slider:before{transform:translateX(18px);background:#0a0e14;}
+
+/* ── BUTTONS ── */
+.btn{background:var(--accent);color:#0a0e14;border:none;padding:11px 18px;font-size:12px;font-weight:700;font-family:var(--mono);border-radius:var(--radius);cursor:pointer;text-transform:uppercase;letter-spacing:.07em;transition:var(--transition);width:100%;display:inline-flex;align-items:center;justify-content:center;gap:6px;}
+.btn:hover{background:var(--accent2);transform:translateY(-1px);box-shadow:0 4px 12px rgba(240,160,48,.2);}
+.btn:active{transform:translateY(0);}
+.btn.ghost{background:var(--surface2);color:var(--muted);border:1px solid var(--border);}
+.btn.ghost:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-glow);}
+.btn.danger{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);}
+.btn.danger:hover{background:rgba(248,113,113,.18);}
+.btn.sm{padding:5px 10px;font-size:10px;width:auto;}
+.btn.success{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);}
+.btn.success:hover{background:rgba(52,211,153,.18);}
+.btn.blue{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border);}
+.btn.blue:hover{background:rgba(96,165,250,.18);}
+
+/* ── QUOTE RESULTS ── */
+.quote-results{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:8px;min-height:0;}
+.vqc{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);flex-shrink:0;cursor:pointer;transition:var(--transition);overflow:hidden;animation:slideUp .35s ease both;}
+.vqc:nth-child(1){animation-delay:0s}.vqc:nth-child(2){animation-delay:.08s}.vqc:nth-child(3){animation-delay:.16s}.vqc:nth-child(4){animation-delay:.24s}
+.vqc:hover{border-color:var(--accent);transform:translateY(-1px);box-shadow:0 4px 16px var(--shadow);}
+.vqc.best{border-color:var(--green);box-shadow:0 0 0 1px var(--green-border);}
+.vqc.best .vqc-head{background:var(--green-bg);}
+.vqc-head{padding:10px 12px;display:flex;align-items:center;gap:8px;}
+.vqc-rank{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;font-weight:700;flex-shrink:0;border:1px solid var(--border);}
+.vqc.best .vqc-rank{background:var(--green);color:#0a0e14;border-color:var(--green);}
+.vqc-bar{width:3px;border-radius:2px;align-self:stretch;flex-shrink:0;min-height:32px;}
+.vqc-name{font-size:14px;font-weight:700;line-height:1.2;}
+.vqc-addr{font-size:11px;color:var(--muted);margin-top:2px;}
+.vqc-badge{margin-left:auto;font-family:var(--mono);font-size:11px;padding:4px 10px;border-radius:4px;white-space:nowrap;font-weight:700;}
+.badge-best{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);}
+.badge-dist{background:var(--accent-glow);color:var(--accent);border:1px solid rgba(240,160,48,.2);}
+.vqc-nums{display:grid;grid-template-columns:1fr 1fr 1fr;background:var(--surface2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+.vqc-num{padding:10px 14px;border-right:1px solid var(--border);}
+.vqc-num:last-child{border-right:none;}
+.num-label{font-size:10px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;}
+.num-val{font-size:15px;font-weight:700;font-family:var(--mono);color:var(--text);}
+.num-val.accent{color:var(--accent);font-size:18px;}
+.num-val.green{color:var(--green);}
+.num-val.sm{font-size:13px;}
+.vqc-breakdown{padding:8px 12px;font-size:11px;color:var(--muted);line-height:2;font-family:var(--mono);border-bottom:1px solid var(--border);}
+.vqc-breakdown b{color:var(--text);}
+.two-load-block{padding:9px 12px;background:var(--blue-bg);border-bottom:1px solid var(--border);}
+.two-load-title{font-size:10px;font-family:var(--mono);color:var(--blue);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;}
+.two-load-nums{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;}
+.tln-label{font-size:9px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;margin-bottom:2px;}
+.tln-val{font-size:12px;font-weight:700;font-family:var(--mono);color:var(--blue);}
+.vqc-actions{display:flex;gap:6px;padding:8px 12px;}
+
+/* ── DISCLAIMER ── */
+.disclaimer{margin:2px 10px 8px;padding:8px 10px;background:var(--accent-glow);border:1px solid rgba(240,160,48,.18);border-radius:var(--radius);font-size:10px;color:var(--muted);line-height:1.7;flex-shrink:0;}
+.disclaimer b{color:var(--accent);}
+
+/* ── CONVERTER ── */
+.converter-block{margin:0 10px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:10px 12px;flex-shrink:0;}
+.converter-title{font-size:10px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;}
+.conv-row{display:flex;align-items:center;gap:5px;font-size:11px;font-family:var(--mono);}
+.conv-row span{color:var(--muted);}
+.conv-row b{color:var(--accent);}
+.conv-input{width:70px!important;padding:5px 8px!important;font-size:12px!important;text-align:right;}
+
+/* ── EMPTY STATE ── */
+.empty-state{padding:30px 20px;text-align:center;color:var(--muted);font-size:12px;line-height:1.8;}
+.empty-state .icon{font-size:32px;margin-bottom:12px;opacity:.7;}
+
+/* ── BROWSE ── */
+.browse-top{padding:12px 14px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.browse-controls{display:flex;gap:8px;align-items:center;margin-top:8px;}
+.browse-search{flex:1;position:relative;}
+.browse-search input{padding-left:30px;font-size:12px;}
+.browse-search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--muted);pointer-events:none;}
+.sort-select{width:140px;font-size:11px;padding:7px 28px 7px 8px;}
+.filter-row{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px;}
+.filter-chip{font-size:9px;font-family:var(--mono);padding:4px 10px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;text-transform:uppercase;letter-spacing:.05em;transition:var(--transition);}
+.filter-chip:hover{border-color:var(--muted);}
+.filter-chip.active{background:var(--accent);color:#0a0e14;border-color:var(--accent);}
+.vendor-list{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:7px;min-height:0;}
+.vendor-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:10px 12px;cursor:pointer;transition:var(--transition);flex-shrink:0;}
+.vendor-card:hover{border-color:var(--accent);transform:translateX(2px);}
+.vendor-card.selected{border-color:var(--accent);background:var(--surface2);}
+.vc-header{display:flex;align-items:center;gap:7px;margin-bottom:5px;}
+.vc-bar{width:3px;height:28px;border-radius:2px;flex-shrink:0;}
+.vc-name{font-size:12px;font-weight:600;line-height:1.2;}
+.vc-addr{font-size:10px;color:var(--muted);margin-top:1px;}
+.dist-badge{margin-left:auto;font-family:var(--mono);font-size:10px;font-weight:600;color:var(--accent);background:var(--accent-glow);padding:2px 7px;border-radius:4px;white-space:nowrap;}
+.product-tags{display:flex;flex-wrap:wrap;gap:3px;margin-top:4px;}
+.product-tag{font-size:9px;font-family:var(--mono);padding:2px 6px;border-radius:3px;color:#fff;font-weight:700;text-transform:uppercase;}
+.price-row{margin-top:6px;padding-top:6px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:2px;}
+.price-item{font-size:11px;color:var(--muted);}
+.price-item strong{color:var(--text);font-family:var(--mono);}
+.vc-actions{display:flex;gap:5px;margin-top:7px;padding-top:7px;border-top:1px solid var(--border);}
+
+
+
+/* ── COLOR / ICON PICKER ── */
+.color-picker-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:5px;}
+.color-swatch{width:24px;height:24px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:var(--transition);flex-shrink:0;}
+.color-swatch.active{border-color:#fff;transform:scale(1.15);box-shadow:0 0 8px var(--shadow);}
+.color-swatch:hover{transform:scale(1.08);}
+input[type="color"]{width:24px;height:24px;border-radius:50%;border:2px solid var(--border);padding:0;cursor:pointer;background:transparent;}
+.icon-picker-row{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px;}
+.icon-swatch{width:32px;height:32px;border-radius:6px;cursor:pointer;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:16px;transition:var(--transition);background:var(--bg);}
+.icon-swatch.active{border-color:var(--accent);background:var(--accent-glow);}
+.icon-swatch:hover{border-color:var(--muted);}
+
+/* ── PRODUCT MANAGER ── */
+.product-list{display:flex;flex-direction:column;gap:5px;margin-top:5px;}
+.product-row{display:grid;grid-template-columns:1fr 80px 28px;gap:6px;align-items:center;}
+.product-name-tag{font-size:11px;font-family:var(--mono);padding:4px 8px;border-radius:4px;color:#fff;font-weight:700;}
+.del-btn{background:transparent;border:1px solid var(--border);color:var(--red);border-radius:5px;cursor:pointer;font-size:13px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;transition:var(--transition);flex-shrink:0;}
+.del-btn:hover{background:var(--red-bg);border-color:var(--red);}
+.add-product-row{display:flex;gap:6px;margin-top:6px;align-items:center;}
+.product-select{flex:1;}
+
+/* ── SETTINGS ── */
+.settings-tabs{display:flex;gap:4px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border);overflow-x:auto;}
+.settings-tab-btn{background:transparent;color:var(--muted);border:1px solid transparent;padding:6px 12px;font-size:10px;font-family:var(--mono);text-transform:uppercase;border-radius:6px;cursor:pointer;transition:var(--transition);white-space:nowrap;}
+.settings-tab-btn:hover{color:var(--text);background:var(--surface2);}
+.settings-tab-btn.active{background:var(--accent);color:#0a0e14;font-weight:700;}
+.settings-tab-content{display:none;}
+.settings-tab-content.active{display:block;}
+.settings-scroll{flex:1;overflow-y:auto;min-height:0;padding:14px;}
+.settings-section{margin-bottom:18px;}
+.settings-section-title{font-size:10px;font-family:var(--mono);color:var(--accent);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+.srow{display:grid;grid-template-columns:1fr 90px;gap:8px;align-items:center;margin-bottom:7px;}
+.slabel{font-size:11px;color:var(--muted);}
+.sinput{text-align:right;padding:6px 10px!important;font-size:12px!important;}
+.freight-table{width:100%;border-collapse:collapse;font-size:11px;}
+.freight-table th{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:6px 8px;border-bottom:1px solid var(--border);text-align:left;}
+.freight-table td{padding:6px 8px;border-bottom:1px solid var(--border);}
+.save-bar{padding:10px 12px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:center;flex-shrink:0;}
+
+/* ── QUOTE HISTORY ── */
+.history-list{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:8px;min-height:0;}
+.history-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:12px;flex-shrink:0;cursor:pointer;transition:var(--transition);}
+.history-card:hover{border-color:var(--accent);transform:translateX(2px);}
+.hc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;}
+.hc-title{font-size:12px;font-weight:700;}
+.hc-date{font-size:10px;color:var(--muted);font-family:var(--mono);}
+.hc-details{font-size:11px;color:var(--muted);line-height:1.7;font-family:var(--mono);}
+.hc-details b{color:var(--text);}
+.hc-winner{margin-top:6px;padding:6px 8px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:6px;font-size:11px;font-family:var(--mono);}
+.hc-winner b{color:var(--green);}
+.hc-actions{display:flex;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);}
+
+/* ── COMPARISON VIEW ── */
+.compare-panel{display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0;}
+.compare-panel.active{display:flex;}
+.compare-header{padding:12px 14px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.compare-grid{flex:1;overflow:auto;padding:10px;}
+.compare-table{width:100%;border-collapse:collapse;font-size:11px;min-width:500px;}
+.compare-table th{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding:8px;border-bottom:2px solid var(--border);text-align:left;position:sticky;top:0;background:var(--surface);z-index:1;}
+.compare-table td{padding:8px;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:11px;}
+.compare-table tr:hover td{background:var(--surface2);}
+.compare-table .best-cell{color:var(--green);font-weight:700;}
+.compare-table .worst-cell{color:var(--red);opacity:.7;}
+
+/* ── MAP ── */
+#map{flex:1;min-width:0;overflow:hidden;}
+.demo-badge{position:absolute;top:10px;right:10px;z-index:1000;pointer-events:none;background:var(--green-bg);border:1px solid var(--green-border);color:var(--green);font-family:var(--mono);font-size:9px;padding:4px 10px;border-radius:20px;letter-spacing:.08em;text-transform:uppercase;}
+.map-click-hint{position:absolute;bottom:40px;left:50%;transform:translateX(-50%);z-index:999;background:rgba(10,14,20,.9);border:1px solid var(--border);color:var(--muted);font-family:var(--mono);font-size:10px;padding:6px 14px;border-radius:20px;pointer-events:none;white-space:nowrap;display:none;backdrop-filter:blur(8px);}
+.map-click-hint.show{display:block;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);z-index:9999;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:11px;padding:10px 20px;border-radius:var(--radius-lg);box-shadow:0 12px 32px var(--shadow);pointer-events:none;opacity:0;transition:all .35s cubic-bezier(.4,0,.2,1);backdrop-filter:blur(12px);}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.success{border-color:var(--green-border);color:var(--green);}
+.toast.error{border-color:var(--red-border);color:var(--red);}
+
+/* ── MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);width:480px;max-width:95vw;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.6);animation:scaleIn .2s ease;}
+.modal-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.modal-title{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;}
+.modal-close{background:transparent;border:none;color:var(--muted);font-size:18px;cursor:pointer;line-height:1;padding:4px;border-radius:4px;transition:var(--transition);}
+.modal-close:hover{color:var(--red);background:var(--red-bg);}
+.modal-body{overflow-y:auto;padding:16px;flex:1;display:flex;flex-direction:column;gap:14px;}
+.modal-foot{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0;}
+
+/* EDIT QUOTE MODAL */
+.modal-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 10000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal-content {
+  background: var(--surface); width: 100%; max-width: 500px;
+  border: 1px solid var(--border); border-radius: 12px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.5); padding: 24px;
+  transform: translateY(20px); transition: transform 0.3s ease;
+}
+.modal-overlay.open .modal-content { transform: translateY(0); }
+.modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.modal-title { font-size: 18px; font-weight: 700; color: var(--accent); }
+.modal-close { background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer; }
+.edit-form-grid { display: grid; grid-template-columns: 1fr; gap: 16px; margin-bottom: 24px; }
+.edit-field { display: flex; flex-direction: column; gap: 6px; }
+.edit-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.edit-input { 
+  background-color: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+  color: var(--text); padding: 10px 12px; font-size: 14px; outline: none; transition: border 0.3s;
+}
+.edit-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow); }
+.edit-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.edit-preview-box { 
+  background: var(--accent-glow); border: 1px dashed var(--accent); border-radius: 8px;
+  padding: 12px; text-align: center; margin-bottom: 20px;
+}
+.edit-preview-label { font-size: 10px; color: var(--muted); margin-bottom: 4px; }
+.edit-preview-total-val { font-size: 20px; font-weight: 800; color: var(--accent); font-family: var(--mono); }
+
+/* ── GOOGLE PLACES AUTOCOMPLETE ── */
+.pac-container{background:var(--surface)!important;border:1px solid var(--border)!important;border-radius:var(--radius-lg)!important;box-shadow:0 8px 24px var(--shadow)!important;font-family:var(--sans)!important;margin-top:4px!important;overflow:hidden;}
+.pac-item{padding:8px 12px!important;cursor:pointer!important;border-top:1px solid var(--border)!important;color:var(--text)!important;font-size:12px!important;line-height:1.4!important;}
+.pac-item:first-child{border-top:none!important;}
+.pac-item:hover,.pac-item-selected{background:var(--surface2)!important;}
+.pac-item-query{color:var(--text)!important;font-size:13px!important;font-weight:600!important;}
+.pac-matched{color:var(--accent)!important;font-weight:700!important;}
+.pac-icon{display:none!important;}.pac-logo:after{display:none!important;}.pac-container:after{display:none!important;}
+
+/* ── ADMIN BLUR & LOCK ── */
+.admin-blur-wrap { position: relative; overflow: hidden; border-radius: var(--radius); transition: var(--transition); height: 36px; }
+.admin-blur-content { filter: blur(5px); pointer-events: none; user-select: none; transition: filter .4s ease; height: 100%; display: flex; align-items: center; }
+.admin-blur-content input { margin: 0 !important; height: 100%; }
+.admin-lock-overlay { 
+  position: absolute; inset: 0; 
+  display: flex; align-items: center; justify-content: center; 
+  background: var(--surface2); cursor: pointer; z-index: 10;
+  transition: opacity .3s ease;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+}
+.lock-icon-large { font-size: 16px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
+.admin-blur-wrap.unlocked { height: auto; overflow: visible; }
+.admin-blur-wrap.unlocked .admin-blur-content { filter: blur(0); pointer-events: auto; user-select: auto; }
+.admin-blur-wrap.unlocked .admin-lock-overlay { opacity: 0; pointer-events: none; }
+
+/* ── TRAFFIC STYLES ── */
+.traffic-badge { font-size: 9px; font-family:var(--mono); padding: 2px 6px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px; font-weight: 700; margin-top: 4px; }
+.traffic-smooth { background: var(--green-bg); color: var(--green); }
+.traffic-moderate { background: #fffbeb; color: #d97706; }
+.traffic-heavy { background: #fef2f2; color: var(--red); }
+.traffic-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+.traffic-dot.smooth { background: #22c55e; }
+.traffic-dot.moderate { background: #f59e0b; }
+.traffic-dot.heavy { background: #ef4444; }
+
+.route-label { 
+  background: rgba(10, 14, 20, 0.85); 
+  padding: 4px 8px; 
+  border-radius: 4px; 
+  border: 1px solid var(--border); 
+  backdrop-filter: blur(4px);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* ── MOBILE ── */
+.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:300;background:var(--surface);border-top:1px solid var(--border);padding:6px 8px;padding-bottom:calc(6px + env(safe-area-inset-bottom));flex-shrink:0;}
+.mobile-nav-inner{display:flex;gap:2px;}
+.mobile-tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 4px;border-radius:var(--radius);cursor:pointer;background:transparent;border:none;color:var(--muted);font-family:var(--mono);font-size:8px;text-transform:uppercase;letter-spacing:.04em;transition:var(--transition);}
+.mobile-tab.active{color:var(--accent);background:var(--accent-glow);}
+.mobile-tab .mt-icon{font-size:16px;}
+.sidebar-toggle{display:none;position:fixed;bottom:70px;right:12px;z-index:301;width:44px;height:44px;border-radius:50%;background:var(--accent);color:#0a0e14;border:none;font-size:18px;cursor:pointer;box-shadow:0 4px 16px rgba(240,160,48,.3);display:none;}
+
+@media(max-width:768px){
+  header{padding:0 10px;gap:6px;}
+  .logo span{display:none;}
+  .header-center{display:none;}
+  .legend{display:none;}
+  .sidebar{width:100%;position:fixed;top:50px;left:0;right:0;bottom:56px;z-index:100;transform:translateX(-100%);transition:transform .3s ease;}
+  .sidebar.mobile-open{transform:translateX(0);}
+  .mobile-nav{display:block;}
+  #map-wrapper{position:fixed;top:50px;left:0;right:0;bottom:56px;}
+  .modal{width:95vw;max-height:85vh;}
+}
+
+/* ── PRINT / PDF EXPORT ── */
+@media print {
+  body{background:#fff!important;color:#000!important;overflow:visible!important;height:auto!important;}
+  header,.sidebar,.mobile-nav,.demo-badge,.map-click-hint,.toast,.modal-overlay,.main{display:none!important;}
+  #map-wrapper{display:none!important;}
+  .print-quote{display:block!important;padding:30px 40px;font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;max-width:700px;margin:0 auto;}
+  @page{margin:15mm 12mm;size:letter;}
+}
+.print-quote{display:none;}
+</style>
+</head>
+<body>
+
+<!-- ── TOAST ── -->
+<div class="toast" id="toast"></div>
+
+<!-- ── HEADER ── -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">HSG</div>
+    Houston Sand & Gravel <span>// Vendor Map</span>
+  </div>
+  <div class="header-center">
+    <button class="htab active" data-tab="quote" onclick="switchTab('quote',this)">💰 Quote</button>
+    <button class="htab" data-tab="browse" onclick="switchTab('browse',this)">🗺 Vendors</button>
+    <button class="htab" data-tab="history" onclick="switchTab('history',this)">📋 History</button>
+    <button class="htab" data-tab="saved" onclick="switchTab('saved',this)">⭐ Saved</button>
+    <button class="htab" data-tab="compare" onclick="switchTab('compare',this)">⚖️ Compare</button>
+
+    <button class="htab" data-tab="settings" onclick="switchTab('settings',this)">🔧 Settings</button>
+  </div>
+  <div class="header-right">
+    <div class="legend" id="headerLegend"></div>
+    <button class="theme-toggle" id="trafficBtn" onclick="toggleTraffic()" title="Toggle Traffic Layer" style="color:var(--muted)">🚦</button>
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn" title="Toggle light/dark mode">🌙</button>
+  </div>
+</header>
+
+<!-- ── MAIN ── -->
+<div class="main">
+  <div class="sidebar" id="sidebar">
+
+    <!-- ══ QUOTE PANEL ══ -->
+    <div class="panel active" id="panel-quote">
+      <div class="section">
+        <div class="section-label"><span class="sl-icon">📋</span> Job Details</div>
+        <div class="field">
+          <label>Customer Name</label>
+          <input type="text" id="q-customer" placeholder="Enter customer name..." />
+        </div>
+        <div class="field">
+          <label>Company Name</label>
+          <input type="text" id="q-company" placeholder="Enter company name..." />
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label>Email</label>
+            <input type="text" id="q-email" placeholder="email@example.com" />
+          </div>
+          <div class="field">
+            <label>Phone No</label>
+            <input type="text" id="q-phone" placeholder="(555) 123-4567" />
+          </div>
+        </div>
+        <div class="field">
+          <label>Job Site Address / Area</label>
+          <input type="text" id="q-address" placeholder="Start typing an address..." />
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label>Product</label>
+            <select id="q-product"><option value="">-- Select --</option></select>
+          </div>
+          <div class="field">
+            <label>Truck Type</label>
+            <select id="q-truck" onchange="updateQtyHelper(true)"></select>
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label>Customer Qty</label>
+            <div style="display:flex;">
+              <input type="number" id="q-tons" placeholder="e.g. 16" min="0.1" step="0.1" oninput="updateQtyHelper()" style="flex:1; border-top-right-radius:0; border-bottom-right-radius:0; border-right:none;" />
+              <select id="q-qty-type" onchange="updateQtyHelper()" style="width:85px; border-top-left-radius:0; border-bottom-left-radius:0; background-color:var(--bg); border:1px solid var(--border); font-size:12px; padding:0 24px 0 8px; color:var(--text); font-weight:700; cursor:pointer;">
+                <option value="tons">Tons</option>
+                <option value="yards">Yards</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label style="display:flex;align-items:center;gap:4px;">Margin % <span class="admin-badge" id="admin-badge-q" style="display:none;font-size:8px;background:var(--green-bg);color:var(--green);padding:2px 4px;border-radius:4px;font-family:var(--mono);font-weight:700;text-transform:uppercase">Admin</span></label>
+            <div class="admin-blur-wrap" id="q-margin-wrap">
+              <div class="admin-lock-overlay" onclick="tryAdminUnlock()"><span class="lock-icon-large">🔒</span></div>
+              <div class="admin-blur-content">
+                <input type="number" id="q-margin" value="40" class="locked-input" readonly tabindex="-1" style="width:100%;"/>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="q-qty-helper" style="font-size:10px; color:var(--muted2); margin-top:4px; font-weight:500; min-height:12px; height:auto; width:100%;"></div>
+      </div>
+      <div class="section" style="padding-top:8px;padding-bottom:8px;">
+        <div class="toggle-row">
+          <div class="toggle-label">Non-Plant Delivery<small>Surcharge for non-plant pickup</small></div>
+          <label class="toggle"><input type="checkbox" id="q-nonplant"/><span class="toggle-slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-label">Tax Free<small>Uncheck to add sales tax</small></div>
+          <label class="toggle"><input type="checkbox" id="q-taxfree" checked/><span class="toggle-slider"></span></label>
+        </div>
+        <div style="margin-top:8px;">
+          <button class="btn" onclick="runQuote()">Calculate Best Vendors →</button>
+        </div>
+      </div>
+
+      <div class="quote-results" id="quoteResults">
+        <div class="empty-state"><div class="icon">💡</div>Fill in job details above and hit <b style="color:var(--accent)">Calculate</b> to see ranked vendor quotes.</div>
+      </div>
+    </div>
+
+    <!-- ══ BROWSE PANEL ══ -->
+    <div class="panel" id="panel-browse">
+      <div class="browse-top">
+        <div class="section-label"><span class="sl-icon">🗺</span> Browse Vendors</div>
+        <div style="margin-bottom:8px">
+          <button class="btn success" onclick="openAddVendor()" style="width:100%">+ Add New Vendor</button>
+        </div>
+        <div class="browse-controls">
+          <div class="browse-search"><span class="browse-search-icon">🔍</span><input type="text" id="browseSearch" placeholder="Search vendors..." oninput="onBrowseSearch()"/></div>
+          <select class="sort-select" id="browseSort" onchange="onBrowseSort()">
+            <option value="name">Sort: Name</option>
+            <option value="price-low">Price: Low→High</option>
+            <option value="price-high">Price: High→Low</option>
+            <option value="products">Most Products</option>
+          </select>
+        </div>
+        <div class="filter-row" id="browseFilters"></div>
+      </div>
+      <div class="vendor-list" id="vendorList"></div>
+    </div>
+
+    <!-- ══ HISTORY PANEL ══ -->
+    <div class="panel" id="panel-history">
+      <div class="section">
+        <div class="section-label"><span class="sl-icon">📋</span> Quote History</div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn danger sm" onclick="clearHistory()" style="flex:1">🗑 Clear All</button>
+        </div>
+      </div>
+      <div class="history-list" id="historyList">
+        <div class="empty-state"><div class="icon">📋</div>No quotes yet.<br>Run a quote to see it saved here.</div>
+      </div>
+    </div>
+
+    <!-- ══ COMPARE PANEL ══ -->
+    <div class="panel" id="panel-compare">
+      <div class="compare-header">
+        <div class="section-label"><span class="sl-icon">⚖️</span> Vendor Comparison</div>
+        <div class="row2" style="margin-top:8px">
+          <div class="field">
+            <label>Product</label>
+            <select id="compare-product" onchange="renderComparison()"><option value="">-- Select --</option></select>
+          </div>
+          <div class="field">
+            <label>Sort By</label>
+            <select id="compare-sort" onchange="renderComparison()">
+              <option value="price">Base Price</option>
+              <option value="name">Name</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="compare-grid" id="compareGrid">
+        <div class="empty-state"><div class="icon">⚖️</div>Select a product above to compare vendors side by side.</div>
+      </div>
+    </div>
+
+
+
+    <!-- ══ SAVED QUOTES PANEL ══ -->
+    <div class="panel" id="panel-saved">
+      <div class="browse-top">
+        <div class="browse-search">
+          <span class="browse-search-icon">🔍</span>
+          <input type="text" id="savedSearch" placeholder="Search saved quotes (Name, ID, Phone...)" oninput="renderSavedQuotes()" />
+        </div>
+      </div>
+      <div class="history-list" id="savedQuotesList">
+        <div class="empty-state"><div class="icon">⭐</div>No saved quotes yet. Capture your final winning bids here for professional archiving.</div>
+      </div>
+    </div>
+    <div class="panel" id="panel-settings">
+      <div class="settings-scroll">
+        <div class="settings-tabs">
+          <button class="settings-tab-btn active" onclick="switchSettingsTab('general', this)">General</button>
+          <button class="settings-tab-btn" onclick="switchSettingsTab('products', this)">Products</button>
+          <button class="settings-tab-btn" onclick="switchSettingsTab('trucks', this)">Trucks</button>
+        </div>
+
+        <div id="stab-general" class="settings-tab-content active">
+          <div class="settings-section">
+            <div class="settings-section-title">Global Defaults</div>
+            <div class="srow">
+              <div class="slabel">Default Marginal Profit %<div style="font-size:9px;color:var(--muted2);margin-top:2px">Syncs to Quote panel</div></div>
+              <input class="sinput" type="number" id="s-margin" value="40" step="1" oninput="el('q-margin').value=this.value" style="width:90px;height:100%;"/>
+            </div>
+            <div class="srow"><div class="slabel">Tax Rate %</div><input class="sinput" type="number" id="s-tax" value="8.25" step="0.01"/></div>
+          </div>
+          <div class="settings-section">
+            <div class="settings-section-title">Data Management</div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn blue sm" onclick="exportData()" style="flex:1">📤 Export JSON</button>
+              <button class="btn ghost sm" onclick="document.getElementById('importFile').click()" style="flex:1">📥 Import JSON</button>
+              <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)"/>
+            </div>
+            <div style="margin-top:8px">
+              <button class="btn danger sm" onclick="resetAllData()" style="width:100%">⚠️ Reset to Defaults</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="stab-products" class="settings-tab-content">
+          <div class="settings-section">
+            <div class="settings-section-title">Product List</div>
+            <div id="productManagerList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;"></div>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <input type="text" id="new-product-name" placeholder="New product name..." style="flex:1;font-size:12px;padding:7px 10px"/>
+              <input type="color" id="new-product-color" value="#888888" title="Product color" style="width:28px;height:28px;border-radius:50%;border:1px solid var(--border);padding:2px;cursor:pointer;background:transparent;flex-shrink:0"/>
+              <button class="btn sm" onclick="addGlobalProduct()" style="white-space:nowrap;flex-shrink:0">+ Add</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="stab-trucks" class="settings-tab-content">
+          <div class="settings-section">
+            <button class="btn success" onclick="openTruckModal()" style="width:100%;margin-bottom:8px;">+ Add New Truck Manually</button>
+            <button class="btn ghost sm" onclick="resetTrucksToDefault()" style="width:100%;margin-bottom:12px;border-style:dashed;font-size:10px;">🔄 Reset to Standard HSG Fleet (10 Trucks)</button>
+            <div id="truckManagerList" style="display:flex;flex-direction:column;gap:8px;"></div>
+          </div>
+        </div>
+      </div>
+      <div class="save-bar">
+        <button class="btn" style="flex:1" onclick="saveSettings()">Save All Settings</button>
+      </div>
+    </div>
+
+  </div><!-- /sidebar -->
+
+  <div id="map-wrapper" style="flex:1 1 0;position:relative;overflow:hidden;min-width:0;min-height:0;display:flex;flex-direction:column;">
+    <div id="map" style="flex:1 1 0;width:100%;min-height:0;"></div>
+    <div class="demo-badge">● Google Maps Live</div>
+    <div class="map-click-hint" id="mapHint">📍 Click on map to place new vendor</div>
+  </div>
+</div>
+
+<!-- ── MOBILE NAV ── -->
+<div class="mobile-nav" id="mobileNav">
+  <div class="mobile-nav-inner">
+    <button class="mobile-tab active" data-tab="quote" onclick="mobileSwitch('quote',this)"><span class="mt-icon">💰</span>Quote</button>
+    <button class="mobile-tab" data-tab="browse" onclick="mobileSwitch('browse',this)"><span class="mt-icon">🗺</span>Vendors</button>
+    <button class="mobile-tab" data-tab="history" onclick="mobileSwitch('history',this)"><span class="mt-icon">📋</span>History</button>
+    <button class="mobile-tab" data-tab="saved" onclick="mobileSwitch('saved',this)"><span class="mt-icon">⭐</span>Saved</button>
+    <button class="mobile-tab" data-tab="compare" onclick="mobileSwitch('compare',this)"><span class="mt-icon">⚖️</span>Compare</button>
+
+    <button class="mobile-tab" data-tab="settings" onclick="mobileSwitch('settings',this)"><span class="mt-icon">🔧</span>Settings</button>
+  </div>
+</div>
+
+<!-- ── VENDOR MODAL ── -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title" id="modalTitle">Edit Vendor</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div>
+        <div class="section-label">Basic Info</div>
+        <div class="field"><label>Company Name</label><input type="text" id="m-vendor" placeholder="e.g. Martin Marietta"/></div>
+        <div class="field"><label>Location Name</label><input type="text" id="m-name" placeholder="e.g. Martin Marietta — Katy"/></div>
+        <div class="field"><label>Address</label><input type="text" id="m-address" placeholder="e.g. 1200 Mason Rd, Katy, TX"/></div>
+        <div class="row2">
+          <div class="field"><label>Latitude</label><input type="number" id="m-lat" step="0.0001" placeholder="29.7604"/></div>
+          <div class="field"><label>Longitude</label><input type="number" id="m-lng" step="0.0001" placeholder="-95.3698"/></div>
+        </div>
+        <div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:2px">💡 Use Manage tab → click map to auto-fill coordinates</div>
+      </div>
+      <div>
+        <div class="section-label">Vendor Color</div>
+        <div class="color-picker-row" id="colorPicker"></div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+          <input type="color" id="m-color-custom" value="#4ade80" oninput="selectCustomColor(this.value)"/>
+          <span style="font-size:11px;color:var(--muted)">Custom</span>
+          <span style="font-family:var(--mono);font-size:11px;color:var(--accent)" id="m-color-display">#4ade80</span>
+        </div>
+      </div>
+      <div>
+        <div class="section-label">Pin Icon</div>
+        <div class="icon-picker-row" id="iconPicker"></div>
+      </div>
+      <div>
+        <div class="section-label">Products & Prices Per Ton</div>
+        <div class="product-list" id="modalProductList"></div>
+        <div class="add-product-row">
+          <select id="m-new-product" class="product-select"><option value="">Add product...</option></select>
+          <button class="btn sm" onclick="addProductToModal()" style="white-space:nowrap">+ Add</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn danger sm" id="deleteVendorBtn" onclick="deleteVendor()" style="width:auto;display:none;">🗑 Delete</button>
+      <button class="btn ghost sm" onclick="closeModal()" style="flex:1">Cancel</button>
+      <button class="btn sm" onclick="saveVendor()" style="flex:2">✓ Save Vendor</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── CONFIRM DIALOG ── -->
+<div class="modal-overlay" id="confirmOverlay">
+  <div class="modal" style="width:360px;">
+    <div class="modal-head">
+      <div class="modal-title" id="confirmTitle" style="color:var(--red)">Confirm</div>
+      <button class="modal-close" onclick="document.getElementById('confirmOverlay').classList.remove('open')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:12px;color:var(--muted);line-height:1.6;" id="confirmMsg"></div>
+    </div>
+    <div class="modal-foot">
+      <button id="confirmCancelBtn" class="btn ghost sm" style="flex:1">Cancel</button>
+      <button id="confirmOkBtn" class="btn danger sm" style="flex:1">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── ADMIN LOGIN MODAL ── -->
+<div class="modal-overlay" id="adminLoginOverlay">
+  <div class="modal" style="width:320px;">
+    <div class="modal-head">
+      <div class="modal-title">Admin Authentication</div>
+      <button class="modal-close" onclick="closeAdminLogin()">✕</button>
+    </div>
+    <div class="modal-body" style="text-align:center; padding: 24px 16px;">
+      <div style="font-size:24px; margin-bottom:12px;">🔒</div>
+      <div style="font-size:12px; color:var(--muted); margin-bottom:16px;">Enter passcode to unlock margin settings</div>
+      <input type="password" id="adminPasscode" placeholder="••••" 
+             style="text-align:center; font-size:24px; letter-spacing:8px; padding:12px; border-color:var(--accent);"
+             onkeydown="if(event.key==='Enter')submitAdminLogin()"/>
+    </div>
+    <div class="modal-foot">
+      <button class="btn ghost sm" onclick="closeAdminLogin()" style="flex:1">Cancel</button>
+      <button class="btn sm" onclick="submitAdminLogin()" style="flex:2">Unlock Access</button>
+    </div>
+  </div>
+</div>
+
+  <!-- EDIT QUOTE MODAL -->
+  <div class="modal-overlay" id="editQuoteOverlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">📄 Edit Client Quote</div>
+        <button class="modal-close" onclick="closeEditModal()">✕</button>
+      </div>
+      <div class="edit-form-grid">
+        <div class="edit-field">
+          <label class="edit-label">Customer Name</label>
+          <input type="text" id="edit-cust-name" class="edit-input" placeholder="e.g. John Smith">
+        </div>
+        <div class="edit-field">
+          <label class="edit-label">Company Name</label>
+          <input type="text" id="edit-company-name" class="edit-input" placeholder="e.g. Acme Corp">
+        </div>
+        <div class="edit-row">
+          <div class="edit-field">
+            <label class="edit-label">Email</label>
+            <input type="text" id="edit-email" class="edit-input" placeholder="email@example.com">
+          </div>
+          <div class="edit-field">
+            <label class="edit-label">Phone No</label>
+            <input type="text" id="edit-phone" class="edit-input" placeholder="(555) 123-4567">
+          </div>
+        </div>
+        <div class="edit-field">
+          <label class="edit-label">Project / Address</label>
+          <input type="text" id="edit-proj-addr" class="edit-input">
+        </div>
+        <div class="edit-field">
+          <label class="edit-label">Product Name & Desc</label>
+          <select id="edit-prod-name" class="edit-input" style="cursor:pointer; padding-right:32px;" onchange="recalcEditQuote()"></select>
+        </div>
+        <div class="edit-field">
+          <label class="edit-label">Truck Description</label>
+          <select id="edit-truck-type" class="edit-input" style="cursor:pointer; padding-right:32px;" onchange="recalcEditQuote()"></select>
+        </div>
+        <div class="edit-row">
+          <div class="edit-field">
+            <label class="edit-label">Total Tons</label>
+            <input type="number" id="edit-qty" class="edit-input" step="0.1" oninput="updateEditTotal()">
+          </div>
+          <div class="edit-field">
+            <label class="edit-label">Price / Ton ($)</label>
+            <input type="number" id="edit-rate" class="edit-input" step="0.01" oninput="updateEditTotal()">
+          </div>
+        </div>
+      </div>
+      <div class="edit-preview-box">
+        <div class="edit-preview-label">Official Quote Total</div>
+        <div id="edit-preview-total" class="edit-preview-total-val">$0.00</div>
+      </div>
+      <button class="btn" style="width:100%" onclick="confirmEditQuote()">Confirm & Generate Quote</button>
+    </div>
+  </div>
+
+<div class="print-quote" id="printQuote"></div>
+
+<script>
+const el = id => document.getElementById(id);
+// ═══════════════════════════════════════════════════════════════
+// DEFAULT DATA
+// ═══════════════════════════════════════════════════════════════
+const DEFAULT_PRODUCTS = ["Limestone Base","Concrete Sand","Gravel","Fill Sand","Stabilized Sand","Decomposed Granite","Flex Base"];
+const DEFAULT_PRODUCT_COLORS = {"Limestone Base":"#78716c","Concrete Sand":"#a78bfa","Gravel":"#6b7280","Fill Sand":"#d97706","Stabilized Sand":"#2dd4bf","Decomposed Granite":"#a3856a","Flex Base":"#6d9b3a"};
+const DEFAULT_THEORETICAL_WEIGHTS = {"Limestone Base":3000,"Stabilized Sand":3000,"Concrete Sand":3000,"Fill Sand":2700,"Gravel":2800,"Decomposed Granite":2800,"Flex Base":3000};
+const DEFAULT_VENDORS = [
+  {id:1,name:"Martin Marietta — Katy",vendor:"Martin Marietta",color:"#4ade80",icon:"⬟",lat:29.7859,lng:-95.8244,address:"1200 Mason Rd, Katy, TX",products:["Limestone Base","Concrete Sand","Gravel"],prices:{"Limestone Base":44.50,"Concrete Sand":32.00,"Gravel":38.75}},
+  {id:2,name:"Martin Marietta — Brookshire",vendor:"Martin Marietta",color:"#4ade80",icon:"⬟",lat:29.7858,lng:-95.9577,address:"9500 FM 359, Brookshire, TX",products:["Limestone Base","Gravel"],prices:{"Limestone Base":42.00,"Gravel":37.50}},
+  {id:3,name:"Vulcan Materials — Baytown",vendor:"Vulcan Materials",color:"#60a5fa",icon:"▲",lat:29.7355,lng:-94.9774,address:"5900 N Main St, Baytown, TX",products:["Limestone Base","Concrete Sand","Stabilized Sand"],prices:{"Limestone Base":45.00,"Concrete Sand":31.50,"Stabilized Sand":38.00}},
+  {id:4,name:"Vulcan Materials — Pasadena",vendor:"Vulcan Materials",color:"#60a5fa",icon:"▲",lat:29.6910,lng:-95.2091,address:"1500 Red Bluff Rd, Pasadena, TX",products:["Concrete Sand","Gravel","Fill Sand"],prices:{"Concrete Sand":30.00,"Gravel":39.00,"Fill Sand":21.50}},
+  {id:5,name:"TX Crushed Stone — N Houston",vendor:"Texas Crushed Stone",color:"#f87171",icon:"◆",lat:29.9902,lng:-95.3677,address:"12800 Veterans Memorial Dr, Houston, TX",products:["Limestone Base","Gravel"],prices:{"Limestone Base":43.00,"Gravel":36.00}},
+  {id:6,name:"TX Crushed Stone — Sugar Land",vendor:"Texas Crushed Stone",color:"#f87171",icon:"◆",lat:29.5988,lng:-95.6347,address:"15900 Voss Rd, Sugar Land, TX",products:["Limestone Base","Concrete Sand"],prices:{"Limestone Base":44.00,"Concrete Sand":33.00}},
+  {id:7,name:"Lone Star Sand — Conroe",vendor:"Lone Star Sand",color:"#fbbf24",icon:"●",lat:30.3119,lng:-95.4561,address:"3200 N Frazier St, Conroe, TX",products:["Concrete Sand","Fill Sand","Stabilized Sand"],prices:{"Concrete Sand":29.50,"Fill Sand":20.00,"Stabilized Sand":36.00}},
+  {id:8,name:"Lone Star Sand — Alvin",vendor:"Lone Star Sand",color:"#fbbf24",icon:"●",lat:29.4238,lng:-95.2441,address:"1100 Gordon St, Alvin, TX",products:["Fill Sand","Concrete Sand"],prices:{"Fill Sand":19.50,"Concrete Sand":28.00}},
+];
+const DEFAULT_CONTRACT_FREIGHT=[{label:"0–6",maxMiles:6,fee:85},{label:"7–10",maxMiles:10,fee:100},{label:"11–20",maxMiles:20,fee:125},{label:"21–30",maxMiles:30,fee:150},{label:"31–40",maxMiles:40,fee:175},{label:"41–50",maxMiles:50,fee:200},{label:"51–60",maxMiles:60,fee:225},{label:"61+",maxMiles:999,fee:250}];
+const DEFAULT_SMALL_FREIGHT=[{label:"0–10",maxMiles:10,fee:150},{label:"11–20",maxMiles:20,fee:200},{label:"21–30",maxMiles:30,fee:250},{label:"31–40",maxMiles:40,fee:300},{label:"41–50",maxMiles:50,fee:350},{label:"51–60",maxMiles:60,fee:400},{label:"61–70",maxMiles:70,fee:450},{label:"71+",maxMiles:999,fee:500}];
+
+const DEFAULT_TRUCKS = [
+  { id: 'small', name: "Small Truck", minTons: 0, maxTons: 8, npFee: 150, freight: DEFAULT_SMALL_FREIGHT },
+  { id: 'tandem', name: "Tandem Truck", minTons: 8.01, maxTons: 14, npFee: 100, freight: DEFAULT_SMALL_FREIGHT },
+  { id: 'tri', name: "Tri Axle (Contract)", minTons: 14.1, maxTons: 16, npFee: 50, freight: DEFAULT_CONTRACT_FREIGHT },
+  { id: 'quad', name: "Quad Axle", minTons: 16.1, maxTons: 18, npFee: 50, freight: DEFAULT_CONTRACT_FREIGHT },
+  { id: 'super', name: "Super", minTons: 18.1, maxTons: 21, npFee: 50, freight: DEFAULT_CONTRACT_FREIGHT },
+  { id: 'super_drop', name: "Super w/ Drop", minTons: 21.1, maxTons: 23, npFee: 50, freight: DEFAULT_CONTRACT_FREIGHT },
+  { id: 'steel_semi', name: "Steel High Side Semi", minTons: 19, maxTons: 22, npFee: 50, freight: DEFAULT_CONTRACT_FREIGHT },
+  { id: 'round_trailer', name: "Round Bottom Trailer", minTons: 21.1, maxTons: 23, npFee: 50, freight: DEFAULT_CONTRACT_FREIGHT },
+  { id: 'round_permit', name: "Round Bottom w/ Permit", minTons: 21.1, maxTons: 25, npFee: 50, freight: DEFAULT_CONTRACT_FREIGHT },
+  { id: 'alum_semi', name: "Aluminum Semi Trailer", minTons: 25, maxTons: 27, npFee: 50, freight: DEFAULT_CONTRACT_FREIGHT }
+];
+
+const VENDOR_COLORS = ["#4ade80","#60a5fa","#f87171","#fbbf24","#c084fc","#fb923c","#34d399","#f472b6","#38bdf8","#a3e635"];
+const ICONS = ["⬟","▲","◆","●","■","★","⬡","⬢","♦","✦","⊕","⊗"];
+
+// ═══════════════════════════════════════════════════════════════
+// ADMIN SECURITY
+// ═══════════════════════════════════════════════════════════════
+const ADMIN_KEYS = ["1212", "3434"];
+let isAdmin = false;
+let isTrafficOn = false;
+let routeLabels = [];
+let vendorRenderers = {}; // {vendorId: DirectionsRenderer}
+
+function toggleTraffic() {
+  isTrafficOn = !isTrafficOn;
+  const btn = el('trafficBtn');
+  if (isTrafficOn) {
+    btn.style.color = 'var(--accent)';
+    btn.style.background = 'var(--accent-glow)';
+    showToast("🚦 Traffic Highlighting ON", "success");
+  } else {
+    btn.style.color = 'var(--muted)';
+    btn.style.background = 'transparent';
+    showToast("Traffic Highlighting OFF");
+  }
+  // Re-run the route drawing if we have results
+  if (lastQuoteResults) {
+    const r = lastQuoteResults;
+    drawRoutes(r.results, r.jobLat, r.jobLng);
+  }
+}
+
+function focusRoute(id) {
+  if (!vendorRenderers[id]) return;
+  Object.keys(vendorRenderers).forEach(vid => {
+    const r = vendorRenderers[vid];
+    const isFocus = vid == id;
+    const rank = r._rank || 0;
+    r.setOptions({
+      preserveViewport: true,
+      polylineOptions: {
+        strokeColor: r._baseColor,
+        strokeWeight: rank === 0 ? 6 : 4,
+        strokeOpacity: isFocus ? 1 : 0.4,
+        zIndex: isFocus ? 1000 : (10 - rank)
+      }
+    });
+    // Force refresh by re-setting directions
+    const d = r.getDirections();
+    if(d) r.setDirections(d);
+  });
+  // Also highlight the card
+  const cards = document.querySelectorAll('.vqc');
+  cards.forEach(c => {
+    if (c.getAttribute('onclick')?.includes(id)) {
+      c.style.borderColor = 'var(--accent)';
+      c.style.background = 'var(--surface2)';
+    } else {
+      c.style.borderColor = 'var(--border)';
+      c.style.background = 'transparent';
+    }
+  });
+}
+
+function resetRoutes() {
+  Object.keys(vendorRenderers).forEach((vid) => {
+    const r = vendorRenderers[vid];
+    const rank = r._rank || 0;
+    r.setOptions({
+      preserveViewport: true,
+      polylineOptions: {
+        strokeColor: r._baseColor,
+        strokeWeight: rank === 0 ? 6 : 4,
+        strokeOpacity: 0.8,
+        zIndex: 10 - rank
+      }
+    });
+    const d = r.getDirections();
+    if(d) r.setDirections(d);
+  });
+  const cards = document.querySelectorAll('.vqc');
+  cards.forEach(c => {
+    c.style.borderColor = 'var(--border)';
+    c.style.background = 'transparent';
+  });
+}
+
+function tryAdminUnlock() {
+  if (isAdmin) return;
+  const overlay = el('adminLoginOverlay');
+  const input = el('adminPasscode');
+  if (overlay && input) {
+    input.value = '';
+    overlay.classList.add('open');
+    setTimeout(() => input.focus(), 100);
+  }
+}
+
+function closeAdminLogin() {
+  const overlay = el('adminLoginOverlay');
+  if (overlay) overlay.classList.remove('open');
+}
+
+function submitAdminLogin() {
+  const input = el('adminPasscode');
+  const key = input.value;
+  
+  if (ADMIN_KEYS.includes(key)) {
+    isAdmin = true;
+    closeAdminLogin();
+    updateAdminUI();
+    showToast("✓ Admin Access Granted", "success");
+  } else {
+    showToast("Invalid passcode", "error");
+    input.value = '';
+    input.focus();
+  }
+}
+
+function updateAdminUI() {
+  if (!isAdmin) return;
+  
+  // Unlock Quote Panel
+  const qWrap = el('q-margin-wrap');
+  const qMargin = el('q-margin');
+  const qBadge = el('admin-badge-q');
+  if (qWrap) qWrap.classList.add('unlocked');
+  if (qMargin) {
+    qMargin.readOnly = false;
+    qMargin.removeAttribute('tabindex');
+    qMargin.style.background = 'var(--input-bg)';
+    qMargin.style.borderStyle = 'solid';
+    qMargin.style.borderColor = 'var(--green)';
+  }
+  if (qBadge) qBadge.style.display = 'inline-block';
+  
+  // Unlock Settings Panel
+  const sWrap = el('s-margin-wrap');
+  if (sWrap) sWrap.classList.add('unlocked');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PERSISTENCE (localStorage)
+// ═══════════════════════════════════════════════════════════════
+const STORAGE_KEY = 'hsg_vendor_map_v5';
+
+function loadData(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      const d = JSON.parse(raw);
+      return d;
+    }
+  }catch(e){console.warn('Failed to load saved data:',e);}
+  return null;
+}
+
+function saveData(){
+  try{
+    const data = {
+      vendors: VENDORS,
+      allProducts: ALL_PRODUCTS,
+      productColors: PRODUCT_COLORS,
+      theoreticalWeights: THEORETICAL_WEIGHTS,
+      trucks: TRUCKS,
+      quoteHistory: QUOTE_HISTORY,
+      savedQuotes: SAVED_QUOTES,
+      nextId: nextId,
+      nextTruckId: nextTruckId,
+      nextSavedId: nextSavedId,
+      settings: {
+        margin: document.getElementById('s-margin')?.value,
+        tax: document.getElementById('s-tax')?.value
+      },
+      theme: isLight ? 'light' : 'dark'
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }catch(e){console.warn('Failed to save data:',e);}
+}
+
+function initFromStorage(){
+  const d = loadData();
+  if(!d) return false;
+  if(d.vendors) VENDORS = d.vendors;
+  if(d.allProducts) ALL_PRODUCTS = d.allProducts;
+  if(d.productColors) PRODUCT_COLORS = d.productColors;
+  if(d.theoreticalWeights) { THEORETICAL_WEIGHTS = d.theoreticalWeights; }
+  else if(d.conversionFactors) {
+    Object.keys(d.conversionFactors).forEach(k => THEORETICAL_WEIGHTS[k] = d.conversionFactors[k] * 2000);
+  }
+  if(d.trucks){
+    TRUCKS = d.trucks.map(t => {
+      if(t.capacity !== undefined && t.minTons === undefined) {
+        t.minTons = t.capacity;
+        t.maxTons = t.capacity;
+        delete t.capacity;
+      }
+      return t;
+    });
+    // ONE-TIME AUTO-INFUSION: If user has 5 or fewer trucks, they likely have the old legacy fleet.
+    // We force-inject the full 10-truck fleet to ensure they see the new categories.
+    if(TRUCKS.length < 5) {
+      const existingNames = TRUCKS.map(tx => tx.name.toLowerCase());
+      DEFAULT_TRUCKS.forEach(dt => {
+        if(!existingNames.includes(dt.name.toLowerCase())) {
+          TRUCKS.push(JSON.parse(JSON.stringify(dt)));
+        }
+      });
+    }
+    if(d.nextTruckId) nextTruckId = d.nextTruckId;
+  } else {
+    TRUCKS = JSON.parse(JSON.stringify(DEFAULT_TRUCKS));
+    nextTruckId = 11;
+  }
+  if(d.quoteHistory) QUOTE_HISTORY = d.quoteHistory;
+  if(d.savedQuotes) SAVED_QUOTES = d.savedQuotes;
+  if(d.nextId) nextId = d.nextId;
+  if(d.nextSavedId) nextSavedId = d.nextSavedId;
+  if(d.settings){
+    const s = d.settings;
+    setTimeout(()=>{
+      if(s.margin){ el('s-margin').value = s.margin; el('q-margin').value = s.margin; }
+      if(s.tax) el('s-tax').value = s.tax;
+    },50);
+  }
+  if(d.theme === 'light'){
+    isLight = true;
+    document.documentElement.classList.add('light');
+    document.getElementById('themeBtn').textContent = '☀️';
+  }
+  return true;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MUTABLE STATE
+// ═══════════════════════════════════════════════════════════════
+let ALL_PRODUCTS = [...DEFAULT_PRODUCTS];
+let PRODUCT_COLORS = {...DEFAULT_PRODUCT_COLORS};
+let THEORETICAL_WEIGHTS = {...DEFAULT_THEORETICAL_WEIGHTS};
+let VENDORS = JSON.parse(JSON.stringify(DEFAULT_VENDORS));
+let TRUCKS = JSON.parse(JSON.stringify(DEFAULT_TRUCKS));
+let QUOTE_HISTORY = [];
+let SAVED_QUOTES = [];
+
+let nextId = 9;
+let nextTruckId = 11;
+let nextSavedId = 1001;
+let map, geocoder, infoWindow, distanceMatrix;
+let leafletMarkers=[], polyLines=[], dirRenderers=[];
+let activeFilter='all', selectedId=null, jobMarker=null;
+let editingVendorId=null, pendingLatLng=null, placingMode=false;
+let selectedColor=VENDOR_COLORS[0], selectedIcon=ICONS[0];
+let modalProducts={};
+let isLight = false;
+let lastQuoteResults = null; // store for PDF export & history
+
+// Helpers
+
+let isManualTruck = false;
+
+// ═══════════════════════════════════════════════════════════════
+// MAP STYLES
+// ═══════════════════════════════════════════════════════════════
+const DARK_MAP_STYLES = [
+  {elementType:'geometry',stylers:[{color:'#12171f'}]},
+  {elementType:'labels.text.stroke',stylers:[{color:'#12171f'}]},
+  {elementType:'labels.text.fill',stylers:[{color:'#6b7a8d'}]},
+  {featureType:'road',elementType:'geometry',stylers:[{color:'#1e2a3a'}]},
+  {featureType:'road',elementType:'labels.text.fill',stylers:[{color:'#6b7a8d'}]},
+  {featureType:'road.highway',elementType:'geometry',stylers:[{color:'#2a3545'}]},
+  {featureType:'water',elementType:'geometry',stylers:[{color:'#0a0e14'}]},
+  {featureType:'water',elementType:'labels.text.fill',stylers:[{color:'#3a4555'}]},
+  {featureType:'poi',stylers:[{visibility:'off'}]},
+  {featureType:'transit',stylers:[{visibility:'off'}]},
+  {featureType:'landscape',elementType:'geometry',stylers:[{color:'#0e1420'}]},
+  {featureType:'administrative',elementType:'geometry.stroke',stylers:[{color:'#2a3545'}]},
+  {featureType:'administrative.land_parcel',elementType:'labels',stylers:[{visibility:'off'}]},
+];
+const LIGHT_MAP_STYLES = [
+  {featureType:'poi',stylers:[{visibility:'off'}]},
+  {featureType:'transit',stylers:[{visibility:'off'}]},
+  {featureType:'road',elementType:'geometry',stylers:[{color:'#e8eaed'}]},
+  {featureType:'road.highway',elementType:'geometry',stylers:[{color:'#dde1e9'}]},
+  {featureType:'road',elementType:'labels.text.fill',stylers:[{color:'#555'}]},
+  {featureType:'water',elementType:'geometry',stylers:[{color:'#bfd7ea'}]},
+  {featureType:'landscape',elementType:'geometry',stylers:[{color:'#f8f9fa'}]},
+  {featureType:'administrative',elementType:'geometry.stroke',stylers:[{color:'#c8cdd4'}]},
+  {featureType:'administrative.land_parcel',elementType:'labels',stylers:[{visibility:'off'}]},
+];
+
+// ═══════════════════════════════════════════════════════════════
+// THEME
+// ═══════════════════════════════════════════════════════════════
+function toggleTheme(){
+  isLight = !isLight;
+  document.documentElement.classList.toggle('light', isLight);
+  el('themeBtn').textContent = isLight ? '☀️' : '🌙';
+  if(map) map.setOptions({styles: isLight ? LIGHT_MAP_STYLES : DARK_MAP_STYLES});
+  saveData();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════════════════
+function showToast(msg, type=''){
+  const t = el('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type ? ' '+type : '');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=>t.classList.remove('show'), 3000);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CONFIRM DIALOG
+// ═══════════════════════════════════════════════════════════════
+function showConfirmDialog(title, msg, onConfirm){
+  el('confirmTitle').textContent = title;
+  el('confirmMsg').textContent = msg;
+  el('confirmOverlay').classList.add('open');
+  el('confirmOkBtn').onclick = ()=>{ el('confirmOverlay').classList.remove('open'); onConfirm(); };
+  el('confirmCancelBtn').onclick = ()=>{ el('confirmOverlay').classList.remove('open'); };
+}
+
+function switchTab(id,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  const p=el('panel-'+id);if(p)p.classList.add('active');
+
+  document.querySelectorAll('.htab').forEach(t=>t.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  else {
+    const target=document.querySelector(`.htab[data-tab="${id}"]`);
+    if(target)target.classList.add('active');
+  }
+
+  // Mobile sync
+  document.querySelectorAll('.mobile-tab').forEach(t=>t.classList.remove('active'));
+  const m=document.querySelector(`.mobile-tab[data-tab="${id}"]`);
+  if(m)m.classList.add('active');
+
+  if(id==='browse') renderBrowse(getFilteredBrowse());
+  if(id==='compare') { buildCompareDropdown(); renderComparison(); }
+  if(id==='history') renderHistory();
+  if(id==='saved') renderSavedQuotes();
+  if(id==='settings') {
+    renderProductManager();
+    buildTruckDropdown();
+    renderTruckList();
+  }
+  
+  // Reset modes
+  placingMode = false;
+  if(el('mapHint')) el('mapHint').classList.remove('show');
+}
+
+function mobileSwitch(id,btn){
+  switchTab(id);
+  const sb = el('sidebar');
+  if(sb) sb.classList.add('mobile-open');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SAVED QUOTES LOGIC
+// ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+// SAVED QUOTES LOGIC (Archives)
+// ═══════════════════════════════════════════════════════════════
+function saveFinalQuote(vId, resultIdx) {
+  if(!lastQuoteResults) return showToast('No results to save','error');
+  const v = lastQuoteResults.results[resultIdx];
+  if(!v) return;
+
+  const quoteId = `SQ-${nextSavedId++}`;
+  const record = {
+    id: quoteId,
+    timestamp: Date.now(),
+    customer: lastQuoteResults.customer,
+    company: lastQuoteResults.company,
+    email: lastQuoteResults.email,
+    phone: lastQuoteResults.phone,
+    address: lastQuoteResults.address,
+    product: lastQuoteResults.product,
+    tons: lastQuoteResults.tons,
+    truckType: lastQuoteResults.truckType,
+    marginPct: lastQuoteResults.marginPct,
+    nonPlant: lastQuoteResults.nonPlant,
+    taxFree: lastQuoteResults.taxFree,
+    vendorName: v.name,
+    vendorAddr: v.address,
+    distance: v.distance,
+    calculation: calcQuote(v.prices[lastQuoteResults.product], v.distance, lastQuoteResults.tons, lastQuoteResults.truckType, lastQuoteResults.nonPlant, lastQuoteResults.taxFree, lastQuoteResults.marginPct)
+  };
+
+  SAVED_QUOTES.unshift(record);
+  saveData();
+  showToast(`✓ Quote ${quoteId} Archived`,'success');
+  switchTab('saved');
+}
+
+function renderSavedQuotes() {
+  const container = el('savedQuotesList');
+  if(!container) return;
+  const query = el('savedSearch').value.toLowerCase().trim();
+
+  const filtered = SAVED_QUOTES.filter(q => {
+    if(!query) return true;
+    const s = `${q.id} ${q.customer} ${q.company} ${q.phone} ${q.email} ${q.vendorName} ${q.product} ${q.address}`.toLowerCase();
+    return s.includes(query);
+  });
+
+  if(!filtered.length) {
+    container.innerHTML = `<div class="empty-state"><div class="icon">🔍</div>${query ? 'No matches found.' : 'No saved quotes yet.'}</div>`;
+    return;
+  }
+
+  container.innerHTML = filtered.map(q => {
+    const dateStr = new Date(q.timestamp).toLocaleDateString();
+    return `
+      <div class="history-card" onclick="viewSavedQuote('${q.id}')">
+        <div class="hc-top">
+          <div class="hc-title">${q.id}: ${q.customer || 'Unnamed'}</div>
+          <div class="hc-date">${dateStr}</div>
+        </div>
+        <div class="hc-details">
+          ${q.company ? `🏢 ${q.company}<br>` : ''}
+          🏆 <b>${q.vendorName}</b><br>
+          📦 ${q.product} · ${q.tons.toFixed(1)}t<br>
+          💰 <span style="color:var(--accent);font-weight:700">$${q.calculation.total.toFixed(2)}</span> ($${q.calculation.perTon.toFixed(2)}/u)
+        </div>
+        <div class="vqc-actions" style="margin-top:8px; border-top:1px solid var(--border); padding:8px 0 0; display:flex; gap:6px;">
+          <button class="btn sm" onclick="event.stopPropagation();showToast('Order management system coming in next update!','info')" style="flex:1;font-size:9px">Generate PO</button>
+          <button class="btn sm ghost" onclick="event.stopPropagation();showToast('Invoice system coming in next update!','info')" style="flex:1;font-size:9px">Invoice</button>
+          <button class="btn ghost sm" onclick="event.stopPropagation();deleteSavedQuote('${q.id}')" style="color:var(--red);border-color:rgba(239, 68, 68, 0.2); width:32px">🗑</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function deleteSavedQuote(id) {
+  showConfirmDialog(`Delete Archive ${id}?`, 'This record will be permanently removed from your sales history.', () => {
+    SAVED_QUOTES = SAVED_QUOTES.filter(q => q.id !== id);
+    saveData();
+    renderSavedQuotes();
+    showToast('Record removed','success');
+  });
+}
+
+function viewSavedQuote(id) {
+  const q = SAVED_QUOTES.find(x => x.id === id);
+  if(!q) return;
+  showToast(`Archive Details for ${id} — Full report coming soon!`,`info`);
+}
+
+function initSidebar(){
+  initFromStorage();
+  buildProductDropdown();
+  buildCompareDropdown();
+  renderBrowse(VENDORS);
+  buildBrowseFilters();
+  buildHeaderLegend();
+  renderHistory();
+  renderSavedQuotes();
+}
+document.addEventListener('DOMContentLoaded', initSidebar);
+
+function initMap(){
+  map = new google.maps.Map(el('map'), {
+    center:{lat:29.7604,lng:-95.3698}, zoom:10, mapTypeId:'roadmap',
+    styles: isLight ? LIGHT_MAP_STYLES : DARK_MAP_STYLES,
+    disableDefaultUI:true, zoomControl:true,
+    zoomControlOptions:{position:google.maps.ControlPosition.LEFT_BOTTOM},
+    gestureHandling:'greedy'
+  });
+  map.addListener('click', onMapClick);
+  geocoder = new google.maps.Geocoder();
+  infoWindow = new google.maps.InfoWindow();
+  distanceMatrix = new google.maps.DistanceMatrixService();
+  
+  if(loadData()){
+    google.maps.event.trigger(map,'resize');
+    map.setCenter({lat:29.7604,lng:-95.3698});
+    addMarkers(VENDORS);
+  }
+  // Places Autocomplete
+  const addressInput = el('q-address');
+  const autocomplete = new google.maps.places.Autocomplete(addressInput, {
+    componentRestrictions:{country:'us'},
+    fields:['formatted_address','geometry','name'],
+    bounds: new google.maps.LatLngBounds(new google.maps.LatLng(29.0,-96.5), new google.maps.LatLng(31.0,-94.0)),
+    strictBounds:false
+  });
+  autocomplete.addListener('place_changed',()=>{
+    const place = autocomplete.getPlace();
+    if(!place.geometry) return;
+    addressInput.dataset.lat = place.geometry.location.lat();
+    addressInput.dataset.lng = place.geometry.location.lng();
+    addressInput.dataset.formatted = place.formatted_address || place.name;
+    if(map){ map.panTo(place.geometry.location); map.setZoom(12); }
+  });
+  addressInput.addEventListener('input',()=>{ addressInput.dataset.lat=''; addressInput.dataset.lng=''; });
+}
+window.initMap = initMap;
+
+function onMapClick(e){
+  if(!placingMode) return;
+  const lat=e.latLng.lat(), lng=e.latLng.lng();
+  el('m-lat').value = lat.toFixed(6);
+  el('m-lng').value = lng.toFixed(6);
+  pendingLatLng = [lat,lng];
+  if(pendingLatLng._marker) pendingLatLng._marker.setMap(null);
+  pendingLatLng._marker = new google.maps.Marker({position:{lat,lng},map,icon:makeGoogleIcon(selectedColor,selectedIcon)});
+  el('mapHint').classList.remove('show');
+  openModal(null);
+  placingMode = false;
+}
+
+function switchSettingsTab(tabId, btn) {
+  document.querySelectorAll('.settings-tab-content').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.settings-tab-btn').forEach(b => b.classList.remove('active'));
+  el('stab-' + tabId).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PIN ICONS
+// ═══════════════════════════════════════════════════════════════
+function makeSVGUrl(color,symbol,w,h){
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 34 42">
+    <defs><filter id="s"><feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-opacity="0.3"/></filter></defs>
+    <path d="M17 1C8 1 1 8 1 17c0 11 16 24 16 24S33 28 33 17C33 8 26 1 17 1Z" fill="${color}" stroke="#0a0e14" stroke-width="1.5" filter="url(#s)"/>
+    <circle cx="17" cy="17" r="8" fill="rgba(0,0,0,0.25)"/>
+    <text x="17" y="21.5" text-anchor="middle" font-size="11" fill="#fff" font-weight="bold" font-family="serif">${symbol||'●'}</text>
+  </svg>`;
+  return 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent(svg);
+}
+function makeGoogleIcon(color,symbol){return{url:makeSVGUrl(color,symbol,32,40),scaledSize:new google.maps.Size(32,40),anchor:new google.maps.Point(16,40)};}
+function makeJobGoogleIcon(){
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="38" height="46" viewBox="0 0 34 42">
+    <defs><filter id="js"><feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity="0.4"/></filter></defs>
+    <path d="M17 1C8 1 1 8 1 17c0 11 16 24 16 24S33 28 33 17C33 8 26 1 17 1Z" fill="#f0a030" stroke="#0a0e14" stroke-width="1.5" filter="url(#js)"/>
+    <circle cx="17" cy="17" r="9" fill="rgba(0,0,0,0.2)"/>
+    <text x="17" y="22" text-anchor="middle" font-size="14" fill="#fff" font-family="sans-serif">✦</text>
+  </svg>`;
+  return{url:'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent(svg),scaledSize:new google.maps.Size(38,46),anchor:new google.maps.Point(19,46)};
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MARKERS
+// ═══════════════════════════════════════════════════════════════
+function addMarkers(list){
+  clearMarkers();
+  list.forEach(v=>{
+    const marker = new google.maps.Marker({position:{lat:v.lat,lng:v.lng},map,icon:makeGoogleIcon(v.color,v.icon||'●'),title:v.name});
+    const tags = v.products.map(p=>'<span style="background:'+(PRODUCT_COLORS[p]||'#555')+';display:inline-block;font-size:9px;padding:2px 5px;border-radius:3px;color:#fff;font-weight:700;margin:1px;font-family:monospace;text-transform:uppercase">'+p+'</span>').join('');
+    const prices = v.products.map(p=>p+': <b>$'+v.prices[p].toFixed(2)+'/ton</b><br>').join('');
+    const content = '<div style="font-family:sans-serif;min-width:190px;padding:4px;font-size:13px">'+
+      '<div style="font-size:13px;font-weight:700;color:#111;margin-bottom:2px">'+v.name+'</div>'+
+      '<div style="font-size:10px;color:#666;font-family:monospace;margin-bottom:7px">'+v.vendor+' · '+v.address+'</div>'+
+      '<div style="margin-bottom:7px">'+tags+'</div>'+
+      '<div style="font-size:11px;color:#444;line-height:1.9;font-family:monospace">'+prices+'</div>'+
+      '<button onclick="useInQuote('+v.id+')" style="margin-top:8px;background:#f0a030;color:#0a0e14;border:none;width:100%;padding:7px;font-size:11px;font-weight:700;font-family:monospace;border-radius:5px;cursor:pointer;text-transform:uppercase">Use in Quote</button></div>';
+    marker.addListener('click',()=>{
+      infoWindow.setContent(content);
+      infoWindow.open(map,marker);
+      selectedId = v.id;
+      if(el('panel-browse').classList.contains('active')){renderBrowse(getFilteredBrowse());scrollToCard(v.id);}
+    });
+    leafletMarkers.push({id:v.id,m:marker});
+  });
+}
+function clearMarkers(){leafletMarkers.forEach(x=>x.m.setMap(null));leafletMarkers=[];}
+function clearLines(){polyLines.forEach(l=>l.setMap(null));polyLines=[];}
+function clearDirections(){
+  dirRenderers.forEach(r=>r.setMap(null));
+  dirRenderers=[];
+  vendorRenderers={};
+  routeLabels.forEach(m=>m.setMap(null));
+  routeLabels=[];
+}
+function useInQuote(id){
+  const v=VENDORS.find(x=>x.id===id);
+  if(v){el('q-product').value=v.products[0];updateConvFactor();switchTab('quote');if(infoWindow)infoWindow.close();}
+}
+
+// ═══════════════════════════════════════════════════════════════
+// BROWSE (with search + sort)
+// ═══════════════════════════════════════════════════════════════
+function getAllProducts(){const set=new Set();VENDORS.forEach(v=>v.products.forEach(p=>set.add(p)));return[...set];}
+function buildBrowseFilters(){
+  const c=el('browseFilters');
+  c.innerHTML='<button class="filter-chip active" onclick="filterProduct(\'all\',this)">All</button>';
+  getAllProducts().forEach(p=>{
+    const b=document.createElement('button');b.className='filter-chip';
+    b.textContent=p.length>12?p.split(' ').map(w=>w[0]).join('').slice(0,4):p;
+    b.title=p;b.onclick=function(){filterProduct(p,this);};
+    c.appendChild(b);
+  });
+}
+function getFilteredBrowse(){
+  let list = activeFilter==='all'?[...VENDORS]:VENDORS.filter(v=>v.products.includes(activeFilter));
+  // Search
+  const q = (el('browseSearch')?.value||'').toLowerCase().trim();
+  if(q) list = list.filter(v=> v.name.toLowerCase().includes(q) || v.vendor.toLowerCase().includes(q) || v.address.toLowerCase().includes(q) || v.products.some(p=>p.toLowerCase().includes(q)));
+  // Sort
+  const sort = el('browseSort')?.value || 'name';
+  if(sort==='name') list.sort((a,b)=>a.name.localeCompare(b.name));
+  else if(sort==='price-low') list.sort((a,b)=>{const ap=Math.min(...Object.values(a.prices)),bp=Math.min(...Object.values(b.prices));return ap-bp;});
+  else if(sort==='price-high') list.sort((a,b)=>{const ap=Math.max(...Object.values(a.prices)),bp=Math.max(...Object.values(b.prices));return bp-ap;});
+  else if(sort==='products') list.sort((a,b)=>b.products.length-a.products.length);
+  return list;
+}
+function onBrowseSearch(){renderBrowse(getFilteredBrowse());}
+function onBrowseSort(){renderBrowse(getFilteredBrowse());}
+
+function renderBrowse(list){
+  const c=el('vendorList');c.innerHTML='';
+  if(!list.length){c.innerHTML='<div class="empty-state"><div class="icon">🔍</div>No vendors match your search.</div>';return;}
+  list.forEach(v=>{
+    const d=document.createElement('div');
+    d.className='vendor-card'+(selectedId===v.id?' selected':'');
+    d.id='card-'+v.id;
+    d.onclick=()=>{selectedId=v.id;renderBrowse(getFilteredBrowse());if(map){map.panTo({lat:v.lat,lng:v.lng});map.setZoom(13);flyToVendor(v.id);}};
+    const dist=v.distance!=null?`<span class="dist-badge">${v.distance.toFixed(1)} mi</span>`:'';
+    const tags=v.products.map(p=>`<span class="product-tag" style="background:${PRODUCT_COLORS[p]||'#555'}">${p}</span>`).join('');
+    const prices=v.products.map(p=>`<div class="price-item">${p}: <strong>$${v.prices[p].toFixed(2)}/ton</strong></div>`).join('');
+    d.innerHTML=`<div class="vc-header"><div class="vc-bar" style="background:${v.color}"></div>
+      <div style="flex:1;min-width:0"><div class="vc-name">${v.icon||'●'} ${v.name}</div><div class="vc-addr">${v.address}</div></div>${dist}</div>
+      <div class="product-tags">${tags}</div>
+      <div class="price-row">${prices}</div>
+      <div class="vc-actions">
+        <button class="btn ghost sm" onclick="event.stopPropagation();openModal(${v.id})" style="flex:1">✏️ Edit</button>
+        <button class="btn danger sm" onclick="event.stopPropagation();confirmDelete(${v.id})" style="flex:1">🗑 Delete</button>
+      </div>`;
+    c.appendChild(d);
+  });
+}
+function scrollToCard(id){const e=el('card-'+id);if(e)e.scrollIntoView({behavior:'smooth',block:'nearest'});}
+function filterProduct(p,btn){
+  activeFilter=p;
+  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  const f=getFilteredBrowse();renderBrowse(f);if(map)addMarkers(activeFilter==='all'?VENDORS:f);
+}
+
+function flyToVendor(id){
+  const v=VENDORS.find(x=>x.id===id);
+  if(!v||!map)return;
+  map.panTo({lat:v.lat,lng:v.lng});map.setZoom(13);
+  const mk=leafletMarkers.find(x=>x.id===id);
+  if(mk && infoWindow){
+    const prices=v.products.map(p=>p+': <b>$'+v.prices[p].toFixed(2)+'/ton</b><br>').join('');
+    infoWindow.setContent('<div style="font-family:sans-serif;min-width:180px;padding:2px">'+
+      '<div style="font-size:13px;font-weight:700;color:#111;margin-bottom:4px">'+v.name+'</div>'+
+      '<div style="font-size:10px;color:#666;font-family:monospace;margin-bottom:6px">'+v.address+'</div>'+
+      '<div style="font-size:11px;color:#444;line-height:1.9;font-family:monospace">'+prices+'</div></div>');
+    infoWindow.open(map,mk.m);
+  }
+}
+
+
+
+// ═══════════════════════════════════════════════════════════════
+// MODAL
+// ═══════════════════════════════════════════════════════════════
+function buildColorPicker(){
+  const c=el('colorPicker');c.innerHTML='';
+  VENDOR_COLORS.forEach(col=>{
+    const s=document.createElement('div');s.className='color-swatch'+(col===selectedColor?' active':'');
+    s.style.background=col;s.title=col;s.onclick=()=>selectColor(col);c.appendChild(s);
+  });
+}
+function selectColor(col){
+  selectedColor=col;el('m-color-custom').value=col;el('m-color-display').textContent=col;
+  document.querySelectorAll('.color-swatch').forEach(s=>s.classList.toggle('active',s.title===col));
+}
+function selectCustomColor(col){selectedColor=col;el('m-color-display').textContent=col;document.querySelectorAll('.color-swatch').forEach(s=>s.classList.remove('active'));}
+function buildIconPicker(){
+  const c=el('iconPicker');c.innerHTML='';
+  ICONS.forEach(ic=>{
+    const s=document.createElement('div');s.className='icon-swatch'+(ic===selectedIcon?' active':'');
+    s.textContent=ic;s.title=ic;s.onclick=()=>selectIcon(ic);c.appendChild(s);
+  });
+}
+function selectIcon(ic){selectedIcon=ic;document.querySelectorAll('.icon-swatch').forEach(s=>s.classList.toggle('active',s.textContent===ic));}
+
+function buildProductDropdown(){
+  const s=el('m-new-product');
+  s.innerHTML='<option value="">Add product...</option>';
+  ALL_PRODUCTS.forEach(p=>{const o=document.createElement('option');o.value=p;o.textContent=p;s.appendChild(o);});
+  const qp=el('q-product');
+  if(qp){
+    qp.innerHTML='<option value="">-- Select --</option>';
+    ALL_PRODUCTS.forEach(p=>{const o=document.createElement('option');o.value=p;o.textContent=p;qp.appendChild(o);});
+    qp.onchange = () => updateQtyHelper();
+  }
+  buildTruckDropdown();
+  renderTruckList();
+}
+function buildCompareDropdown(){
+  const s=el('compare-product');if(!s)return;
+  s.innerHTML='<option value="">-- Select --</option>';
+  ALL_PRODUCTS.forEach(p=>{const o=document.createElement('option');o.value=p;o.textContent=p;s.appendChild(o);});
+}
+
+function buildTruckDropdown(){
+  const s=el('q-truck');
+  if(!s) return;
+  const curr = s.value;
+  s.innerHTML='';
+  TRUCKS.forEach(t=>{
+    const o=document.createElement('option');
+    o.value=t.id; o.textContent=t.name;
+    s.appendChild(o);
+  });
+  if(curr && TRUCKS.find(x=>x.id===curr)) s.value=curr;
+  else if (TRUCKS.length) s.value=TRUCKS[0].id;
+  updateQtyHelper();
+}
+
+function updateQtyHelper(isTruckChange) {
+  if (isTruckChange) isManualTruck = true;
+
+  const inputEl = el('q-tons');
+  const qty = parseFloat(inputEl.value);
+  const type = el('q-qty-type').value;
+  const prod = el('q-product').value;
+  
+  // Reset manual lock if the weight or product is changed
+  if(!isTruckChange && !isNaN(qty)) isManualTruck = false;
+
+  const helper = el('q-qty-helper');
+  if(!helper) return;
+
+  if(!qty || isNaN(qty) || !prod) {
+    helper.innerHTML = '';
+    return;
+  }
+
+  const factor = (THEORETICAL_WEIGHTS[prod] || 3000) / 2000;
+  const actualTons = type === 'yards' ? (qty * factor) : qty;
+  
+  // 1. Auto-Select Truck Type (Only if NOT manual)
+  if(!isManualTruck) autoSelectTruck(actualTons);
+
+  // 2. Display Basic Logistics Info
+  const truckId = el('q-truck').value;
+  const maxCap = getTruckMaxCap(truckId);
+  const numLoads = Math.ceil(actualTons / maxCap) || 1;
+  const remainder = actualTons % maxCap;
+
+  let helperHtml = `<div style="width:100%; display:block; margin-bottom:4px;">`;
+  if(type === 'yards') helperHtml += `<span style="color:var(--muted)">≈ ${actualTons.toFixed(1)} Tons estimated weight</span><br>`;
+  helperHtml += `<span style="color:var(--accent); font-weight:600; font-size:11px;">🚚 Shipping via ${numLoads} ${numLoads > 1 ? 'Trucks' : 'Truck'}</span>`;
+  helperHtml += `</div>`;
+
+  // 2. Efficiency Alert (Trips and Floors)
+  const median = getTruckMedian(truckId);
+
+  if(numLoads > 1) {
+    let alertMsg = '';
+    let alertColor = 'var(--red)';
+    let alertBg = 'var(--red-bg)';
+
+    if(remainder > 0 && remainder <= 5) {
+      alertMsg = `⚠️ <b>LOGISTICS WARNING:</b> Only ${remainder.toFixed(1)}t over capacity. Reduce to <b>${ (actualTons - remainder).toFixed(1) }t</b> to save a full freight charge!`;
+    } else if (remainder > 0) {
+      const unused = maxCap - remainder;
+      alertColor = 'var(--accent)'; 
+      alertBg = 'var(--accent-glow)';
+      alertMsg = `📦 <b>HAULING INFO:</b> ${numLoads} Trucks required. You have <b>${unused.toFixed(1)}t</b> of empty space left on the last truck. Fill it up to maximize your freight cost!`;
+    }
+
+    if(alertMsg) {
+      helperHtml += `<div style="background:${alertBg}; border:1px solid ${alertColor}; color:${alertColor}; padding:8px 12px; border-radius:6px; font-weight:500; margin-top:6px; font-size:10px; line-height:1.4; width:100%; box-sizing:border-box; display:block;">
+        ${alertMsg}
+      </div>`;
+    }
+  } else if (actualTons < median) {
+    // Scenario C: Below the profit floor!
+    const unused = maxCap - actualTons;
+    const alertColor = 'var(--accent)'; 
+    const alertBg = 'var(--accent-glow)';
+    
+    helperHtml += `<div style="background:${alertBg}; border:1px solid ${alertColor}; color:${alertColor}; padding:8px 12px; border-radius:6px; font-weight:500; margin-top:6px; font-size:10px; line-height:1.4; width:100%; box-sizing:border-box; display:block;">
+      📦 <b>HAULING INFO:</b> Order is below the <b>${median}t</b> profit floor. You have <b>${unused.toFixed(1)}t</b> of total space left in this truck. Suggest adding more material to maximize your freight cost!
+    </div>`;
+  }
+
+  helper.innerHTML = helperHtml;
+}
+
+function autoSelectTruck(tons) {
+  if(!tons || tons <= 0) return;
+  
+  // Strategy 1: Find the "Perfect Fit" (Tons falls within the truck's Min-Max range)
+  let perfectFit = TRUCKS.find(t => tons >= parseFloat(t.minTons) && tons <= parseFloat(t.maxTons));
+  
+  if(perfectFit) {
+    const s = el('q-truck');
+    if(s && s.value !== perfectFit.id) { s.value = perfectFit.id; }
+    return;
+  }
+
+  // Strategy 2: Fallback (Find truck with minimum trips)
+  let bestTruck = TRUCKS[0];
+  let minTrips = Infinity;
+
+  TRUCKS.forEach(t => {
+    const maxT = parseFloat(t.maxTons) || 16;
+    const trips = Math.ceil(tons / maxT);
+    
+    if(trips < minTrips) {
+      minTrips = trips;
+      bestTruck = t;
+    } else if (trips === minTrips) {
+      // Calculate efficiency factors
+      const emptySpace = (trips * maxT) - tons;
+      const bestEmptySpace = (minTrips * parseFloat(bestTruck.maxTons)) - tons;
+      
+      const remainder = tons % maxT;
+      const bestRemainder = tons % parseFloat(bestTruck.maxTons);
+      
+      // Benefit Score: Does it trigger the "1t-5t over capacity" warning? (Only for multi-load)
+      const hasBenefit = (trips > 1 && remainder > 0 && remainder <= 5.0) ? 1 : 0;
+      const bestHasBenefit = (minTrips > 1 && bestRemainder > 0 && bestRemainder <= 5.0) ? 1 : 0;
+
+      if (hasBenefit > bestHasBenefit) {
+        bestTruck = t;
+      } else if (hasBenefit === bestHasBenefit) {
+        // If benefits match, pick the one with the LEAST empty space
+        if (emptySpace < bestEmptySpace) {
+          bestTruck = t;
+        }
+      }
+    }
+  });
+
+  if(bestTruck) {
+    const s = el('q-truck');
+    if(s && s.value !== bestTruck.id) { s.value = bestTruck.id; }
+  }
+}
+
+function renderTruckList(){
+  const c = el('truckManagerList');
+  if(!c) return;
+  c.innerHTML = '';
+  TRUCKS.forEach(t => {
+    const minT = parseFloat(t.minTons) || 0;
+    const maxT = parseFloat(t.maxTons) || 16;
+    const med = Math.ceil((minT + maxT) / 2);
+    const d = document.createElement('div');
+    d.className = 'vm-card vc'; 
+    d.style.padding = '10px';
+    d.style.marginBottom = '6px';
+    d.style.background = 'var(--bg)';
+    d.style.border = '1px solid var(--border)';
+    d.style.borderRadius = 'var(--radius-lg)';
+    d.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <div style="font-weight:700;font-size:12px">${t.name}</div>
+        <div style="font-size:10px;color:var(--muted);font-family:var(--mono);">
+          Range: ${minT}–${maxT}t · <b style="color:var(--accent)">Median: ${med}t</b>
+        </div>
+      </div>
+      <div class="vc-actions">
+        <button class="btn ghost sm" onclick="openTruckModal('${t.id}')" style="flex:1">✏️ Edit Details & Freight</button>
+      </div>
+    `;
+    c.appendChild(d);
+  });
+}
+
+function renderModalProducts(){
+  const c=el('modalProductList');c.innerHTML='';
+  Object.keys(modalProducts).forEach(p=>{
+    const row=document.createElement('div');row.className='product-row';
+    row.innerHTML=`<span class="product-name-tag" style="background:${PRODUCT_COLORS[p]||'#555'}">${p}</span>
+      <input type="number" step="0.25" min="0" value="${modalProducts[p].toFixed(2)}" style="padding:4px 8px;font-size:12px;text-align:right" onchange="modalProducts['${p.replace(/'/g,"\\'")}']=parseFloat(this.value)||0"/>
+      <button class="del-btn" onclick="removeProductFromModal('${p.replace(/'/g,"\\'")}')">✕</button>`;
+    c.appendChild(row);
+  });
+}
+function addProductToModal(){const sel=el('m-new-product');const p=sel.value;if(!p)return;if(modalProducts[p]===undefined)modalProducts[p]=0;renderModalProducts();sel.value='';}
+function removeProductFromModal(p){delete modalProducts[p];renderModalProducts();}
+
+function openAddVendor(){
+  placingMode=true;el('mapHint').classList.add('show');
+  editingVendorId=null;pendingLatLng=null;
+  selectedColor=VENDOR_COLORS[0];selectedIcon=ICONS[0];modalProducts={};
+}
+
+function openModal(vendorId){
+  editingVendorId=vendorId;
+  el('modalOverlay').classList.add('open');
+  buildColorPicker();buildIconPicker();renderModalProducts();
+  if(vendorId!==null){
+    const v=VENDORS.find(x=>x.id===vendorId);
+    el('modalTitle').textContent='Edit Vendor';el('deleteVendorBtn').style.display='';
+    el('m-vendor').value=v.vendor;el('m-name').value=v.name;el('m-address').value=v.address;
+    el('m-lat').value=v.lat;el('m-lng').value=v.lng;
+    selectedColor=v.color;selectedIcon=v.icon||'●';modalProducts={...v.prices};
+    buildColorPicker();buildIconPicker();renderModalProducts();
+  } else {
+    el('modalTitle').textContent='Add New Vendor';el('deleteVendorBtn').style.display='none';
+    el('m-vendor').value='';el('m-name').value='';el('m-address').value='';
+    el('m-lat').value=pendingLatLng?pendingLatLng[0].toFixed(6):'';
+    el('m-lng').value=pendingLatLng?pendingLatLng[1].toFixed(6):'';
+    modalProducts={};renderModalProducts();
+  }
+  selectColor(selectedColor);selectIcon(selectedIcon);
+}
+function closeModal(){
+  el('modalOverlay').classList.remove('open');
+  if(pendingLatLng&&pendingLatLng._marker) pendingLatLng._marker.setMap(null);
+  pendingLatLng=null;
+}
+function saveVendor(){
+  const vendor=el('m-vendor').value.trim();
+  const name=el('m-name').value.trim()||vendor;
+  const address=el('m-address').value.trim();
+  const lat=parseFloat(el('m-lat').value);
+  const lng=parseFloat(el('m-lng').value);
+  if(!vendor){showToast('Enter a vendor company name','error');return;}
+  if(isNaN(lat)||isNaN(lng)){showToast('Enter valid coordinates or click map','error');return;}
+  if(Object.keys(modalProducts).length===0){showToast('Add at least one product','error');return;}
+  const products=Object.keys(modalProducts);const prices={...modalProducts};
+  if(editingVendorId!==null){
+    const idx=VENDORS.findIndex(x=>x.id===editingVendorId);
+    if(idx>-1) VENDORS[idx]={...VENDORS[idx],vendor,name,address,lat,lng,color:selectedColor,icon:selectedIcon,products,prices};
+  } else {
+    VENDORS.push({id:nextId++,vendor,name,address,lat,lng,color:selectedColor,icon:selectedIcon,products,prices});
+  }
+  closeModal();refreshAll();saveData();
+  showToast('✓ Vendor saved','success');
+}
+function confirmDelete(id){
+  showConfirmDialog('Delete Vendor?','This cannot be undone.',()=>{
+    VENDORS=VENDORS.filter(x=>x.id!==id);refreshAll();saveData();showToast('Vendor deleted','success');
+  });
+}
+function deleteVendor(){
+  if(editingVendorId===null)return;
+  const vid=editingVendorId;const v=VENDORS.find(x=>x.id===vid);
+  showConfirmDialog(`Delete "${v?v.name:'Vendor'}"?`,'This cannot be undone.',()=>{
+    VENDORS=VENDORS.filter(x=>x.id!==vid);closeModal();refreshAll();saveData();showToast('Vendor deleted','success');
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// REFRESH
+// ═══════════════════════════════════════════════════════════════
+function refreshAll(){
+  if(map) addMarkers(VENDORS);
+  renderBrowse(getFilteredBrowse());
+  buildBrowseFilters();
+  buildProductDropdown();
+  buildCompareDropdown();
+  buildHeaderLegend();
+}
+function buildHeaderLegend(){
+  const vendors={};
+  VENDORS.forEach(v=>{if(!vendors[v.vendor])vendors[v.vendor]=v.color;});
+  el('headerLegend').innerHTML=Object.entries(vendors).map(([name,color])=>
+    `<div class="li"><div class="ld" style="background:${color}"></div>${name.split(' ')[0]}</div>`
+  ).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CALCULATION ENGINE
+// ═══════════════════════════════════════════════════════════════
+function getDeliveryFee(miles,truckType){
+  const t = TRUCKS.find(x => x.id === truckType) || TRUCKS[0];
+  const chart = t ? t.freight : [];
+  if(!chart.length) return 0;
+  for(const r of chart){ if(miles<=r.maxMiles) return parseFloat(r.fee)||0; }
+  return parseFloat(chart[chart.length-1].fee)||0;
+}
+function getTruckMaxCap(truckType){
+  const t = TRUCKS.find(x => x.id === truckType) || TRUCKS[0];
+  return t ? parseFloat(t.maxTons) || 16 : 16;
+}
+function getTruckMedian(truckType){
+  const t = TRUCKS.find(x => x.id === truckType) || TRUCKS[0];
+  if(!t) return 16;
+  const min = parseFloat(t.minTons) || 0;
+  const max = parseFloat(t.maxTons) || 16;
+  return Math.ceil((min + max) / 2);
+}
+function calcQuote(matCost,miles,custTons,truckType,nonPlant,taxFree,marginPct){
+  const maxCap = getTruckMaxCap(truckType);
+  const median = getTruckMedian(truckType);
+  const rawQty = Math.max(0, custTons);
+  
+  // Logistics (How many trips?)
+  const numLoads = Math.ceil(rawQty / maxCap) || 1;
+  
+  // Option B: Charge actual tonnage if it's higher than the profit floor (median).
+  // This ensures minimum profit on small loads, but bills fairly for large loads.
+  const billedTonsValue = Math.max(rawQty, median);
+  
+  let baseDelivFee = getDeliveryFee(miles,truckType);
+  const t = TRUCKS.find(x => x.id === truckType) || TRUCKS[0];
+  const npFeePerLoad = t ? parseFloat(t.npFee)||0 : 0;
+  const npFeeTotal = nonPlant ? (npFeePerLoad * numLoads) : 0;
+  
+  const totalDeliv = (baseDelivFee * numLoads) + npFeeTotal;
+  const matTotal = matCost * billedTonsValue;
+  const subtotal = matTotal + totalDeliv;
+  
+  const markup = marginPct/100;
+  const afterMarkup = subtotal / (1-markup);
+  const taxRate = parseFloat(el('s-tax')?.value||8.25);
+  const taxAmt = taxFree ? 0 : afterMarkup*(taxRate/100);
+  const rawTotal = afterMarkup + taxAmt;
+  
+  // Final Rate shown to customer is adjusted dynamically
+  const perTon = rawQty > 0 ? (Math.ceil((rawTotal / rawQty)*2)/2) : 0;
+  const total = rawQty * perTon; // Recalibrate to match quoted rate exactly
+
+  return { matTotal, delivFee: totalDeliv, npFee: npFeeTotal, subtotal, markup, afterMarkup, taxAmt, total, perTon, calcTons: rawQty, numLoads, taxRate, taxFree, billedTonsValue };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// QUOTE RUNNER
+// ═══════════════════════════════════════════════════════════════
+function haversine(a,b,c,d){const R=3958.8,dL=(c-a)*Math.PI/180,dG=(d-b)*Math.PI/180,x=Math.sin(dL/2)**2+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dG/2)**2;return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));}
+
+function runQuote(){
+  const customer=el('q-customer').value.trim();
+  const company=el('q-company').value.trim();
+  const email=el('q-email').value.trim();
+  const phone=el('q-phone').value.trim();
+  const address=el('q-address').value.trim();
+  const product=el('q-product').value;
+  const truckType=el('q-truck').value;
+  const rawQty=parseFloat(el('q-tons').value);
+  const isYards=el('q-qty-type')?.value === 'yards';
+  let tons = rawQty;
+  if(isYards && product) {
+    const w = THEORETICAL_WEIGHTS[product] || 3000;
+    tons = (rawQty * w) / 2000;
+  }
+  const marginPct=parseFloat(el('q-margin').value)||40;
+  const nonPlant=el('q-nonplant').checked;
+  const taxFree=el('q-taxfree').checked;
+
+  if(!address){showToast('Enter a job site address','error');return;}
+  if(!product){showToast('Select a product','error');return;}
+  if(!tons||tons<1){showToast('Enter valid tonnage','error');return;}
+
+  const container=el('quoteResults');
+  container.innerHTML='<div class="empty-state"><div class="icon" style="animation:pulse 1.5s infinite">🔍</div>Looking up address...</div>';
+
+  if(!geocoder) geocoder = new google.maps.Geocoder();
+  if(!infoWindow) infoWindow = new google.maps.InfoWindow();
+
+  const addrInput=el('q-address');
+  const cachedLat=parseFloat(addrInput.dataset.lat);
+  const cachedLng=parseFloat(addrInput.dataset.lng);
+  const cachedFmt=addrInput.dataset.formatted||address;
+
+  function proceedWithCoords(jobLat,jobLng,formattedAddr){
+    if(map){
+      if(jobMarker) jobMarker.setMap(null);
+      jobMarker = new google.maps.Marker({position:{lat:jobLat,lng:jobLng},map,icon:makeJobGoogleIcon(),title:'Job Site',zIndex:999});
+      infoWindow.setContent('<div style="font-family:sans-serif;padding:4px"><div style="font-size:13px;font-weight:700;color:#f0a030">📍 Job Site</div><div style="font-size:11px;color:#555;margin-top:3px">'+formattedAddr+'</div><div style="font-size:11px;color:#333;margin-top:4px;font-family:monospace">Product: <b>'+product+'</b> · Tons: <b>'+tons+'</b></div></div>');
+      infoWindow.open(map,jobMarker);
+      map.panTo({lat:jobLat,lng:jobLng});map.setZoom(11);
+    }
+
+    const eligible = VENDORS.filter(v=>v.products.includes(product));
+    if(!eligible.length){
+      container.innerHTML='<div class="empty-state"><div class="icon">😕</div>No vendors carry <b>'+product+'</b>.</div>';
+      return;
+    }
+
+    container.innerHTML='<div class="empty-state"><div class="icon" style="animation:pulse 1.5s infinite">🛣️</div>Calculating distances to '+eligible.length+' vendors...</div>';
+
+    if(!distanceMatrix) distanceMatrix = new google.maps.DistanceMatrixService();
+    const destinations = eligible.map(v=>({lat:v.lat,lng:v.lng}));
+
+    distanceMatrix.getDistanceMatrix({
+      origins:[{lat:jobLat,lng:jobLng}], destinations,
+      travelMode:google.maps.TravelMode.DRIVING,
+      unitSystem:google.maps.UnitSystem.IMPERIAL,
+      drivingOptions: {
+        departureTime: new Date(),
+        trafficModel: 'bestguess'
+      }
+    }, (dmResult,dmStatus)=>{
+      let results = eligible.map((v,i)=>{
+        let roadMiles = haversine(jobLat,jobLng,v.lat,v.lng);
+        let durationText = '';
+        let trafficDelay = 0;
+        let trafficStatus = 'smooth';
+        
+        if(dmStatus==='OK' && dmResult.rows[0]?.elements[i]?.status==='OK'){
+          const element = dmResult.rows[0].elements[i];
+          roadMiles = element.distance.value / 1609.34;
+          durationText = element.duration.text;
+          
+          if (element.duration_in_traffic) {
+            const normalSecs = element.duration.value;
+            const trafficSecs = element.duration_in_traffic.value;
+            trafficDelay = Math.max(0, Math.round((trafficSecs - normalSecs) / 60));
+            durationText = element.duration_in_traffic.text;
+            
+            if (trafficDelay > 15) trafficStatus = 'heavy';
+            else if (trafficDelay > 5) trafficStatus = 'moderate';
+          }
+        }
+        return {...v, distance:roadMiles, durationText, trafficDelay, trafficStatus};
+      });
+
+      lastQuoteResults = {results,customer,company,email,phone,product,tons,truckType,nonPlant,taxFree,marginPct,address:formattedAddr,jobLat,jobLng,timestamp:Date.now()};
+
+      results.sort((a,b)=>{
+        const ca=calcQuote(a.prices[product],a.distance,tons,truckType,nonPlant,taxFree,marginPct);
+        const cb=calcQuote(b.prices[product],b.distance,tons,truckType,nonPlant,taxFree,marginPct);
+        return ca.perTon - cb.perTon;
+      });
+
+      // Draw routes for all vendors (up to 8)
+      if(map){
+        drawRoutes(results, jobLat, jobLng);
+      }
+
+      // Store results for export and history
+      QUOTE_HISTORY.unshift({
+        id: Date.now(),
+        address: formattedAddr,
+        product,tons,truckType,marginPct,nonPlant,taxFree,
+        winner: results[0]?.name || 'N/A',
+        winnerPerTon: calcQuote(results[0].prices[product],results[0].distance,tons,truckType,nonPlant,taxFree,marginPct).perTon,
+        vendorCount: results.length,
+        timestamp: Date.now()
+      });
+      if(QUOTE_HISTORY.length>50) QUOTE_HISTORY = QUOTE_HISTORY.slice(0,50);
+      saveData();
+
+      let html = '';
+      results.forEach((v, i) => {
+        const calc = calcQuote(v.prices[product], v.distance, tons, truckType, nonPlant, taxFree, marginPct);
+        const isBest = i === 0;
+        const activeTruck = TRUCKS.find(x => x.id === truckType) || TRUCKS[0];
+        const chart = activeTruck.freight || [];
+        const tier = chart.find(t => v.distance <= t.maxMiles) || chart[chart.length - 1] || { label: '71+', fee: 500 };
+        const driveInfo = v.durationText ? ' · ~' + v.durationText : '';
+        const trafficHtml = v.trafficDelay > 0 
+          ? `<div class="traffic-badge traffic-${v.trafficStatus}"><span class="traffic-dot ${v.trafficStatus}"></span>+${v.trafficDelay} min traffic</div>`
+          : `<div class="traffic-badge traffic-smooth"><span class="traffic-dot smooth"></span>Smooth traffic</div>`;
+
+        html += `<div class="vqc ${isBest ? 'best' : ''}" onclick="flyToVendor(${v.id})" onmouseenter="focusRoute(${v.id})" onmouseleave="resetRoutes()">` +
+          '<div class="vqc-head">' +
+            '<div class="vqc-rank">' + (i + 1) + '</div>' +
+            '<div class="vqc-bar" style="background:' + v.color + '"></div>' +
+            '<div style="flex:1;min-width:0"><div class="vqc-name">' + (v.icon || '●') + ' ' + v.name + '</div><div class="vqc-addr">' + v.address + '</div>' + trafficHtml + '</div>' +
+            (isBest ? '<span class="vqc-badge badge-best">✓ Best</span>' : '<span class="vqc-badge badge-dist">' + v.distance.toFixed(1) + ' mi</span>') +
+          '</div>' +
+          '<div class="vqc-nums">' +
+            '<div class="vqc-num"><div class="num-label">Per ' + (isYards ? 'Yard' : 'Ton') + '</div><div class="num-val accent">$' + calc.perTon.toFixed(2) + '</div></div>' +
+            '<div class="vqc-num"><div class="num-label">Total (' + rawQty + (isYards ? 'y' : 't') + ')</div><div class="num-val ' + (isBest ? 'green' : '') + '">$' + calc.total.toFixed(2) + '</div></div>' +
+            '<div class="vqc-num"><div class="num-label">Distance</div><div class="num-val sm">' + v.distance.toFixed(1) + ' mi' + (driveInfo ? '<br><span style="font-size:9px;color:var(--muted)">' + v.durationText + '</span>' : '') + '</div></div>' +
+          '</div>' +
+          '<div class="vqc-breakdown">' +
+            'Material: <b>$' + v.prices[product].toFixed(2) + ' × ' + calc.billedTonsValue + 't Basis = $' + calc.matTotal.toFixed(2) + '</b><br>' +
+            'Delivery: <b>' + v.distance.toFixed(1) + ' mi → ' + tier.label + ' mi = $' + getDeliveryFee(v.distance, truckType).toFixed(0) + (calc.npFee > 0 ? ' + $' + calc.npFee + ' NP' : '') + ' = $' + calc.delivFee.toFixed(2) + '</b><br>' +
+            'Subtotal <b>$' + calc.subtotal.toFixed(2) + '</b> ÷ (1−' + marginPct + '%) = <b>$' + calc.afterMarkup.toFixed(2) + '</b>' +
+            (!calc.taxFree ? '<br>+ ' + calc.taxRate + '% tax <b>$' + calc.taxAmt.toFixed(2) + '</b> → <b>$' + calc.total.toFixed(2) + '</b>' : '') +
+            '<br>÷ ' + rawQty + (isYards ? 'y' : 't') + ' → <b style="color:var(--accent)">$' + calc.perTon.toFixed(2) + '/' + (isYards ? 'yard' : 'ton') + '</b>' +
+            (isYards ? '<br><span style="font-size:9px;color:var(--muted)">Logistics based on ' + tons.toFixed(1) + ' tons</span>' : '') +
+          '</div>' +
+          '<div class="vqc-actions" style="flex-direction:column; gap:8px;">' +
+            '<div style="display:flex; gap:8px; width:100%;">' +
+              '<button class="btn sm" onclick="event.stopPropagation();saveFinalQuote(' + v.id + ',' + i + ')" style="flex:2">⭐ Save Final Quote</button>' +
+              '<button class="btn ghost sm" onclick="event.stopPropagation();flyToVendor(' + v.id + ')" style="flex:0; width:45px">📍</button>' +
+            '</div>' +
+            '<button class="btn sm ghost" onclick="event.stopPropagation();generateClientQuote(' + v.id + ',' + i + ')" style="width:100%; font-weight:700">📝 Open Client Quote Editor</button>' +
+          '</div>' +
+          '</div>';
+      });
+
+      const maxCap = getTruckMaxCap(truckType);
+      const isInefficient = (tons % maxCap > 0) && (tons % maxCap <= 1.5);
+      const bestTons = Math.floor(tons / maxCap) * maxCap;
+      let alertHtml = '';
+      if(isInefficient && bestTons > 0){
+        alertHtml = `<div class="disclaimer" style="background:var(--red-bg); border-color:var(--red); color:var(--text); margin:8px 12px">
+          <b>⚠️ Logistical Alert:</b> You are just ${ (tons % maxCap).toFixed(1) }t over a single truckload. 
+          Order exactly <b>${bestTons}t</b> to save on freight, or fill the second truck!
+        </div>`;
+      }
+
+      html += alertHtml + `<div class="disclaimer"><b>⚠️ Note:</b> Distances via Google Maps. Quote based on <b>${rawQty} ${isYards?'yards':'tons'}</b>. Final invoice per vendor weight ticket.</div>`;
+      container.innerHTML = html;
+    });
+  }
+
+  if(!isNaN(cachedLat)&&!isNaN(cachedLng)&&cachedLat!==0){
+    proceedWithCoords(cachedLat,cachedLng,cachedFmt);
+  } else {
+    geocoder.geocode({address:address+', TX, USA'},(results,status)=>{
+      if(status!=='OK'||!results.length){
+        container.innerHTML='<div class="empty-state"><div class="icon">❌</div>Could not find that address.</div>';
+        return;
+      }
+      proceedWithCoords(results[0].geometry.location.lat(),results[0].geometry.location.lng(),results[0].formatted_address);
+    });
+  }
+}
+
+function drawRoutes(results, jobLat, jobLng) {
+  clearMarkers(); clearDirections(); addMarkers(results);
+  const dirService = new google.maps.DirectionsService();
+  const rankColors = ['#22c55e','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#3b82f6','#6366f1','#10b981'];
+
+  results.slice(0, 3).forEach((v, i) => {
+    let color = rankColors[i] || '#6b7280';
+    const renderer = new google.maps.DirectionsRenderer({
+      map, suppressMarkers: true,
+      preserveViewport: true,
+      polylineOptions: { strokeColor: color, strokeWeight: i === 0 ? 6 : 4, strokeOpacity: 0.8, zIndex: 10 - i }
+    });
+    renderer._baseColor = color;
+    renderer._rank = i;
+    dirRenderers.push(renderer);
+    vendorRenderers[v.id] = renderer;
+
+    dirService.route({
+      origin: { lat: jobLat, lng: jobLng },
+      destination: { lat: v.lat, lng: v.lng },
+      travelMode: google.maps.TravelMode.DRIVING
+    }, (result, status) => {
+      if (status === 'OK') {
+        renderer.setDirections(result);
+        
+        // Add label to the VENDOR PIN instead of midpoint
+        const statusEmoji = v.trafficStatus === 'heavy' ? '🔴' : (v.trafficStatus === 'moderate' ? '🟡' : '🟢');
+        const trafficDetail = (isTrafficOn && v.trafficDelay > 0) ? ` (+${v.trafficDelay}m)` : '';
+        const labelText = `${statusEmoji} ${v.durationText}${trafficDetail}`;
+
+        const marker = new google.maps.Marker({
+          position: { lat: v.lat, lng: v.lng },
+          map,
+          label: {
+            text: labelText,
+            color: 'white', fontSize: '11px', fontWeight: 'bold', className: 'route-label'
+          },
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            fillColor: color, fillOpacity: 0, strokeWeight: 0, scale: 0,
+            labelOrigin: new google.maps.Point(0, 30) // Position below the main pin
+          },
+          zIndex: 200
+        });
+        routeLabels.push(marker);
+
+        // If this was the last expected route, do an initial focus on the best one
+        if (Object.keys(vendorRenderers).length === Math.min(results.length, 3)) {
+          setTimeout(() => focusRoute(results[0].id), 200);
+        }
+      }
+    });
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// QUOTE HISTORY
+// ═══════════════════════════════════════════════════════════════
+function renderHistory(){
+  const c=el('historyList');
+  if(!QUOTE_HISTORY.length){
+    c.innerHTML='<div class="empty-state"><div class="icon">📋</div>No quotes yet.<br>Run a quote to see it here.</div>';
+    return;
+  }
+  c.innerHTML='';
+  QUOTE_HISTORY.forEach(h=>{
+    const d=document.createElement('div');d.className='history-card fade-in';
+    const date = new Date(h.timestamp);
+    const dateStr = date.toLocaleDateString('en-US',{month:'short',day:'numeric'}) + ' ' + date.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+    d.innerHTML=`<div class="hc-top"><div class="hc-title">📍 ${h.address}</div><div class="hc-date">${dateStr}</div></div>
+      <div class="hc-details"><b>${h.product}</b> · ${h.tons} tons · ${h.truckType} truck · ${h.marginPct}% margin${h.nonPlant?' · Non-plant':''}${h.taxFree?'':' · Taxed'}</div>
+      <div class="hc-winner">Winner: <b>${h.winner}</b> at <b>$${h.winnerPerTon?.toFixed(2)||'—'}/ton</b> (${h.vendorCount} vendors compared)</div>
+      <div class="header-actions">
+      <button class="top-btn" id="trafficBtn" onclick="toggleTraffic()" title="Toggle Traffic Layer" style="color:var(--muted)">🚦 Traffic</button>
+      <button class="top-btn" id="themeBtn" onclick="toggleTheme()" title="Toggle Theme">🌙</button>
+        <button class="btn danger sm" onclick="deleteHistory(${h.id})" style="width:auto">🗑</button>
+      </div>`;
+    c.appendChild(d);
+  });
+}
+function rerunHistory(id){
+  const h=QUOTE_HISTORY.find(x=>x.id===id);
+  if(!h)return;
+  el('q-address').value=h.address;el('q-product').value=h.product;
+  el('q-truck').value=h.truckType;el('q-tons').value=h.tons;
+  el('q-margin').value=h.marginPct;el('q-nonplant').checked=h.nonPlant;
+  el('q-taxfree').checked=h.taxFree;
+  switchTab('quote');
+  setTimeout(()=>runQuote(),100);
+}
+function deleteHistory(id){
+  QUOTE_HISTORY=QUOTE_HISTORY.filter(x=>x.id!==id);saveData();renderHistory();
+  showToast('History entry removed','success');
+}
+function clearHistory(){
+  if(!QUOTE_HISTORY.length)return;
+  showConfirmDialog('Clear All History?','All saved quotes will be deleted.',()=>{
+    QUOTE_HISTORY=[];saveData();renderHistory();showToast('History cleared','success');
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// COMPARISON VIEW
+// ═══════════════════════════════════════════════════════════════
+function renderComparison(){
+  const product = el('compare-product').value;
+  const grid = el('compareGrid');
+  if(!product){
+    grid.innerHTML='<div class="empty-state"><div class="icon">⚖️</div>Select a product to compare vendors.</div>';
+    return;
+  }
+  const eligible = VENDORS.filter(v=>v.products.includes(product));
+  if(!eligible.length){
+    grid.innerHTML='<div class="empty-state"><div class="icon">😕</div>No vendors carry '+product+'.</div>';
+    return;
+  }
+  const sortBy = el('compare-sort').value;
+  if(sortBy==='price') eligible.sort((a,b)=>a.prices[product]-b.prices[product]);
+  else eligible.sort((a,b)=>a.name.localeCompare(b.name));
+
+  const prices = eligible.map(v=>v.prices[product]);
+  const minPrice = Math.min(...prices);
+  const maxPrice = Math.max(...prices);
+
+  let html = '<table class="compare-table"><thead><tr><th>Vendor</th><th>Location</th><th>Base Price/Ton</th><th>Products</th><th>Actions</th></tr></thead><tbody>';
+  eligible.forEach(v=>{
+    const p = v.prices[product];
+    const cls = p===minPrice?'best-cell':(p===maxPrice&&eligible.length>2?'worst-cell':'');
+    html += `<tr><td><div style="display:flex;align-items:center;gap:6px"><div style="width:8px;height:8px;border-radius:50%;background:${v.color}"></div><b>${v.name}</b></div></td>
+      <td style="color:var(--muted)">${v.address}</td>
+      <td class="${cls}">$${p.toFixed(2)}</td>
+      <td><span style="color:var(--muted)">${v.products.length} products</span></td>
+      <td><button class="btn ghost sm" onclick="flyToVendor(${v.id})">📍 Map</button></td></tr>`;
+  });
+  html += '</tbody></table>';
+  if(eligible.length>1){
+    html += '<div style="margin-top:12px;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1.8">'+
+      '<b style="color:var(--text)">'+product+' Summary:</b><br>'+
+      'Lowest: <b style="color:var(--green)">$'+minPrice.toFixed(2)+'</b> · Highest: <b style="color:var(--red)">$'+maxPrice.toFixed(2)+'</b> · Spread: <b style="color:var(--accent)">$'+(maxPrice-minPrice).toFixed(2)+'</b> · Avg: <b>$'+(prices.reduce((a,b)=>a+b,0)/prices.length).toFixed(2)+'</b></div>';
+  }
+  grid.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CLIENT QUOTE PDF (per vendor — branded, no internal info)
+// ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+// CLIENT QUOTE PDF (per vendor) — MANUALLY EDITABLE
+// ═══════════════════════════════════════════════════════════════
+let currentEditParams = null;
+
+function generateClientQuote(vendorId, rankIndex) {
+  if (!lastQuoteResults) { showToast('Run a quote first', 'error'); return; }
+  const r = lastQuoteResults;
+  const v = r.results.find(x => x.id === vendorId);
+  if (!v) { showToast('Vendor not found', 'error'); return; }
+
+  const calc = calcQuote(v.prices[r.product], v.distance, r.tons, r.truckType, r.nonPlant, r.taxFree, r.marginPct);
+  
+  // Store info for the modal
+  currentEditParams = { vendorId, rankIndex, v, r, calc };
+
+  // Populate Modal
+  el('edit-cust-name').value = r.customer || '';
+  el('edit-company-name').value = r.company || '';
+  el('edit-email').value = r.email || '';
+  el('edit-phone').value = r.phone || '';
+  el('edit-proj-addr').value = r.address;
+  const prodSel = el('edit-prod-name');
+  prodSel.innerHTML = ALL_PRODUCTS.map(p => `<option value="${p}">${p} — Delivered</option>`).join('');
+  prodSel.value = r.product;
+
+  const truckSel = el('edit-truck-type');
+  truckSel.innerHTML = TRUCKS.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+  truckSel.value = r.truckType;
+  el('edit-qty').value = calc.calcTons.toFixed(1);
+  el('edit-rate').value = calc.perTon.toFixed(2);
+  
+  updateEditTotal();
+  el('editQuoteOverlay').classList.add('open');
+}
+
+function updateEditTotal() {
+  const q = parseFloat(el('edit-qty').value) || 0;
+  const r = parseFloat(el('edit-rate').value) || 0;
+  el('edit-preview-total').textContent = '$' + (q * r).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
+function recalcEditQuote() {
+  if (!currentEditParams) return;
+  const { v, r } = currentEditParams;
+
+  const newProd = el('edit-prod-name').value;
+  const newTruckId = el('edit-truck-type').value;
+
+  const matPrice = v.prices[newProd] || 0; 
+  const calc = calcQuote(matPrice, v.distance, r.tons, newTruckId, r.nonPlant, r.taxFree, r.marginPct);
+  
+  el('edit-qty').value = calc.calcTons.toFixed(1);
+  el('edit-rate').value = calc.perTon.toFixed(2);
+  updateEditTotal();
+}
+
+function closeEditModal() {
+  el('editQuoteOverlay').classList.remove('open');
+  currentEditParams = null;
+}
+
+function confirmEditQuote() {
+  if (!currentEditParams) return;
+  const { v, r, calc } = currentEditParams;
+
+  const editedCust = el('edit-cust-name').value || 'Valued Customer';
+  const editedCompany = el('edit-company-name').value;
+  const editedEmail = el('edit-email').value;
+  const editedPhone = el('edit-phone').value;
+  const editedAddr = el('edit-proj-addr').value;
+  
+  const prodSel = el('edit-prod-name');
+  const editedProd = prodSel.options[prodSel.selectedIndex].text;
+  
+  const truckSel = el('edit-truck-type');
+  const editedTruck = truckSel.options[truckSel.selectedIndex].text;
+  const editedQty = parseFloat(el('edit-qty').value);
+  const editedRate = parseFloat(el('edit-rate').value);
+  const editedTotal = editedQty * editedRate;
+
+  const cap = getTruckMaxCap(r.truckType);
+  const needsTwoLoads = r.tons > cap;
+  const today = new Date();
+  const dateStr = today.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const quoteNum = 'HSG-' + today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + String(today.getDate()).padStart(2, '0') + '-' + String(Math.floor(Math.random() * 9000) + 1000);
+  const validUntil = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+  const html = `
+    <div style="max-width:700px;margin:0 auto;font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;color:#1a1a2e;line-height:1.5">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:20px;border-bottom:3px solid #d48a18;margin-bottom:24px">
+        <div>
+          <div style="font-size:24px;font-weight:800;color:#1a1a2e;letter-spacing:-.5px">HOUSTON SAND & GRAVEL</div>
+          <div style="font-size:11px;color:#6b7280;letter-spacing:.5px;margin-top:2px">AGGREGATES · DELIVERY · MATERIALS</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px">Material Quote</div>
+          <div style="font-size:16px;font-weight:700;color:#d48a18;font-family:monospace">${quoteNum}</div>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;margin-bottom:20px;font-size:12px;color:#6b7280">
+        <div><b style="color:#1a1a2e">Date:</b> ${dateStr}</div>
+        <div><b style="color:#1a1a2e">Valid Until:</b> ${validUntil}</div>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;gap:20px;margin-bottom:20px">
+        <div style="flex:1;background:#f8f9fb;border:1px solid #e5e7eb;border-radius:8px;padding:16px">
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#6b7280;margin-bottom:10px;font-weight:600">Customer Details</div>
+          <div style="font-size:14px;font-weight:700;color:#1a1a2e;margin-bottom:4px">${editedCust}</div>
+          ${editedCompany ? `<div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:2px">${editedCompany}</div>` : ''}
+          ${editedEmail || editedPhone ? `<div style="font-size:11px;color:#6b7280;margin-bottom:4px">${editedEmail} ${editedEmail&&editedPhone?'|':''} ${editedPhone}</div>` : ''}
+          <div style="font-size:12px;color:#6b7280">${editedAddr}</div>
+        </div>
+        <div style="flex:1;background:#f8f9fb;border:1px solid #e5e7eb;border-radius:8px;padding:16px">
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#6b7280;margin-bottom:10px;font-weight:600">Status</div>
+          <div style="font-size:14px;font-weight:700;color:#059669">✓ Official Bid</div>
+          <div style="font-size:12px;color:#6b7280">Freight: ${editedTruck}</div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:20px">
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead>
+            <tr style="background:#1a1a2e;color:#fff">
+              <th style="padding:10px 14px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.5px">Description</th>
+              <th style="padding:10px 14px;text-align:center;font-size:10px;text-transform:uppercase;letter-spacing:.5px">Qty (Tons)</th>
+              <th style="padding:10px 14px;text-align:right;font-size:10px;text-transform:uppercase;letter-spacing:.5px">Rate / Ton</th>
+              <th style="padding:10px 14px;text-align:right;font-size:10px;text-transform:uppercase;letter-spacing:.5px">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="padding:14px;border:1px solid #dde1ea;font-weight:600">${editedProd}</td>
+              <td style="padding:14px;border:1px solid #dde1ea;text-align:center">${editedQty}</td>
+              <td style="padding:14px;border:1px solid #dde1ea;text-align:right;font-weight:700;font-size:14px">$${editedRate.toFixed(2)}</td>
+              <td style="padding:14px;border:1px solid #dde1ea;text-align:right;font-weight:700;font-size:14px">$${editedTotal.toFixed(2)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;margin-bottom:24px">
+        <table style="border-collapse:collapse;font-size:12px;min-width:260px">
+          <tr style="border-top:2px solid #1a1a2e">
+            <td style="padding:10px 14px;font-weight:800;font-size:14px;text-transform:uppercase">Quote Total</td>
+            <td style="padding:10px 14px;text-align:right;font-weight:800;font-size:22px;color:#d48a18">$${editedTotal.toFixed(2)}</td>
+          </tr>
+          <tr>
+            <td colspan="2" style="padding:4px 14px;text-align:right;font-size:10px;color:#6b7280">
+              ${calc.taxFree ? 'Tax-Exempt Transaction' : 'Sales Tax Included in Rate'}
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      <div style="background:#f8f9fb;border:1px solid #e5e7eb;border-radius:8px;padding:16px;margin-bottom:20px;font-size:11px;color:#6b7280;line-height:1.8">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-weight:600;color:#1a1a2e">Terms & Conditions</div>
+        <div>• Prices include material and delivery to the specified job site address.</div>
+        <div>• Final invoice will be adjusted to actual loaded weight per weight ticket.</div>
+        <div>• Quote is valid for <b style="color:#1a1a2e">7 days</b>. Material availability confirmed at dispatch.</div>
+        <div>• Standard Net 30 payment terms apply.</div>
+      </div>
+
+      <div style="border-top:2px solid #e5e7eb;padding-top:16px;display:flex;justify-content:space-between;align-items:flex-end">
+        <div>
+          <div style="font-size:14px;font-weight:700;color:#1a1a2e">Houston Sand & Gravel</div>
+          <div style="font-size:11px;color:#6b7280;margin-top:2px">Houston, TX · info@houstonsg.com</div>
+        </div>
+        <div style="text-align:right;font-size:10px;color:#9ca3af">
+          Quote Ref: ${quoteNum}<br>
+          Generated: ${dateStr}
+        </div>
+      </div>
+    </div>`;
+
+  el('printQuote').innerHTML = html;
+  closeEditModal();
+  window.print();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CONVERTER
+// ═══════════════════════════════════════════════════════════════
+let convFactorManual = false; // true when user manually edits the factor
+function getConvFactor(){
+  const manualVal = parseFloat(el('conv-factor').value);
+  if(convFactorManual && !isNaN(manualVal) && manualVal > 0) return manualVal;
+  const p=el('q-product').value;
+  return CONVERSION_FACTORS[p]||1.5;
+}
+function updateConvFactor(){
+  if(!convFactorManual){
+    const f = getConvFactor();
+    el('conv-factor').value = f;
+  }
+  convertY2T(); convertT2Y();
+}
+function onConvFactorEdit(){
+  convFactorManual = true;
+  convertY2T(); convertT2Y();
+}
+function convertY2T(){const y=parseFloat(el('conv-yards').value);el('cy-out').textContent=isNaN(y)?'—':(y*getConvFactor()).toFixed(2);}
+function convertT2Y(){const t=parseFloat(el('conv-tons').value);el('ct-out').textContent=isNaN(t)?'—':(t/getConvFactor()).toFixed(2);}
+document.addEventListener('DOMContentLoaded',()=>{
+  const s=el('q-product');
+  if(s) s.addEventListener('change',()=>{convFactorManual=false;updateConvFactor();});
+});
+
+// ═══════════════════════════════════════════════════════════════
+// SETTINGS / PRODUCTS / FREIGHT
+// ═══════════════════════════════════════════════════════════════
+function renderProductManager(){
+  const c=el('productManagerList');if(!c)return;c.innerHTML='';
+  ALL_PRODUCTS.forEach(p=>{
+    const w = THEORETICAL_WEIGHTS[p] || 3000;
+    const row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;';
+    row.innerHTML=`<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${PRODUCT_COLORS[p]||'#888'};flex-shrink:0"></span>
+      <span style="flex:1;font-size:12px;font-family:var(--mono);color:var(--text)">${p}</span>
+      <span style="font-size:10px;color:var(--muted);font-family:var(--mono)">wt: ${w} lbs/yd</span>
+      <button class="btn ghost sm" onclick="editGlobalProduct('${p.replace(/'/g,"\\'")}')" style="padding:2px 6px;margin-right:2px">✏️</button>
+      <button class="del-btn" onclick="deleteGlobalProduct('${p.replace(/'/g,"\\'")}')">✕</button>`;
+    c.appendChild(row);
+  });
+}
+function addGlobalProduct(){
+  const nameEl=el('new-product-name');const colorEl=el('new-product-color');
+  const name=nameEl.value.trim();
+  if(!name){nameEl.focus();return;}
+  if(ALL_PRODUCTS.includes(name)){showToast('Product already exists','error');return;}
+  ALL_PRODUCTS.push(name);PRODUCT_COLORS[name]=colorEl.value||'#888888';THEORETICAL_WEIGHTS[name]=3000;
+  nameEl.value='';colorEl.value='#888888';
+  renderProductManager();buildProductDropdown();buildBrowseFilters();buildCompareDropdown();saveData();
+  showToast('✓ Product "'+name+'" added','success');
+}
+function deleteGlobalProduct(p){
+  const using=VENDORS.filter(v=>v.products.includes(p)).map(v=>v.name);
+  if(using.length>0){
+    showConfirmDialog('Product In Use','"'+p+'" is used by: '+using.join(', ')+'. Remove from global list?',()=>_removeGlobalProduct(p));
+  } else { _removeGlobalProduct(p); }
+}
+function _removeGlobalProduct(p){
+  const idx=ALL_PRODUCTS.indexOf(p);if(idx>-1)ALL_PRODUCTS.splice(idx,1);
+  renderProductManager();buildProductDropdown();buildBrowseFilters();buildCompareDropdown();saveData();
+  showToast('Product removed','success');
+}
+
+function saveSettings(){
+  // Sync default margin to quote panel
+  const defMargin = el('s-margin').value;
+  if(defMargin) el('q-margin').value = defMargin;
+  saveData();
+  showToast('✓ Settings saved','success');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DATA EXPORT / IMPORT / RESET
+// ═══════════════════════════════════════════════════════════════
+function exportData(){
+  saveSettings(); // ensure latest
+  const data = JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}');
+  const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'hsg-vendor-map-backup-'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+  showToast('✓ Data exported','success');
+}
+function importData(event){
+  const file = event.target.files[0];
+  if(!file)return;
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    try{
+      const data = JSON.parse(e.target.result);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      showToast('✓ Data imported — reloading...','success');
+      setTimeout(()=>location.reload(),1000);
+    }catch(err){
+      showToast('Invalid JSON file','error');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value='';
+}
+function resetAllData(){
+  showConfirmDialog('Reset All Data?','This will delete all vendors, history, and settings. Cannot be undone.',()=>{
+    localStorage.removeItem(STORAGE_KEY);
+    showToast('✓ Reset — reloading...','success');
+    setTimeout(()=>location.reload(),1000);
+  });
+}
+// ═══════════════════════════════════════════════════════════════
+// TRUCK MODAL LOGIC
+// ═══════════════════════════════════════════════════════════════
+let editingTruckId = null;
+let editingTruckFreight = [];
+
+function resetTrucksToDefault() {
+  showConfirmDialog('Reset Truck Fleet?','This will replace your current trucks with the standard HSG fleet of 10 trucks. Custom freight tiers on existing trucks will be lost.',()=>{
+    TRUCKS = JSON.parse(JSON.stringify(DEFAULT_TRUCKS));
+    nextTruckId = 11;
+    renderTruckList();
+    buildTruckDropdown();
+    saveData();
+    showToast('✓ Truck fleet reset to defaults','success');
+  });
+}
+
+function openTruckModal(id = null) {
+  editingTruckId = id;
+  if(id) {
+    const t = TRUCKS.find(x => x.id === id);
+    el('tm-title').textContent = 'Edit Truck';
+    el('tm-name').value = t.name;
+    el('tm-min').value = t.minTons || 0;
+    el('tm-max').value = t.maxTons || 16;
+    el('tm-np').value = t.npFee;
+    editingTruckFreight = JSON.parse(JSON.stringify(t.freight || []));
+    el('tm-del').style.display = 'block';
+  } else {
+    el('tm-title').textContent = 'Add New Truck';
+    el('tm-name').value = '';
+    el('tm-min').value = 14;
+    el('tm-max').value = 16;
+    el('tm-np').value = 50;
+    editingTruckFreight = [{label:"0–10",maxMiles:10,fee:100}];
+    el('tm-del').style.display = 'none';
+  }
+  renderTruckFreightTiers();
+  el('truckModalOverlay').classList.add('open');
+}
+
+function renderTruckFreightTiers() {
+  const c = el('tm-freight-list');
+  c.innerHTML = '';
+  editingTruckFreight.forEach((tr, i) => {
+    const row = document.createElement('div');
+    row.style.display = 'flex'; row.style.gap = '4px';
+    row.innerHTML = `
+      <input class="sinput" type="text" placeholder="Label (0-10 mi)" style="flex:1" value="${tr.label}" onchange="editingTruckFreight[${i}].label=this.value" />
+      <input class="sinput" type="number" placeholder="Max Mi" style="width:65px" value="${tr.maxMiles}" onchange="editingTruckFreight[${i}].maxMiles=parseFloat(this.value)||0" />
+      <input class="sinput" type="number" placeholder="Fee ($)" style="width:65px" value="${tr.fee}" onchange="editingTruckFreight[${i}].fee=parseFloat(this.value)||0" />
+      <button class="btn danger sm" onclick="removeTruckFreightRow(${i})" style="padding:0;width:28px">✕</button>
+    `;
+    c.appendChild(row);
+  });
+}
+
+function addTruckFreightRow() {
+  editingTruckFreight.push({label:"",maxMiles:999,fee:0});
+  renderTruckFreightTiers();
+}
+
+function removeTruckFreightRow(index) {
+  editingTruckFreight.splice(index, 1);
+  renderTruckFreightTiers();
+}
+
+function saveTruck() {
+  const name = el('tm-name').value.trim();
+  if(!name) return showToast('Name required', 'error');
+  
+  if (editingTruckId) {
+    const t = TRUCKS.find(x => x.id === editingTruckId);
+    if(t) {
+      t.name = name;
+      t.minTons = parseFloat(el('tm-min').value) || 0;
+      t.maxTons = parseFloat(el('tm-max').value) || 0;
+      t.npFee = parseFloat(el('tm-np').value) || 0;
+      t.freight = JSON.parse(JSON.stringify(editingTruckFreight));
+    }
+  } else { // new
+    const newId = 'trk_' + nextTruckId++;
+    TRUCKS.push({
+      id: newId, 
+      name: name, 
+      minTons: parseFloat(el('tm-min').value)||0,
+      maxTons: parseFloat(el('tm-max').value)||0,
+      npFee: parseFloat(el('tm-np').value)||0, 
+      freight: JSON.parse(JSON.stringify(editingTruckFreight))
+    });
+  }
+  el('truckModalOverlay').classList.remove('open');
+  saveData();
+  buildTruckDropdown();
+  renderTruckList();
+  showToast('✓ Truck saved', 'success');
+}
+
+function deleteTruck() {
+  if(!editingTruckId) return;
+  if(TRUCKS.length <= 1) return showToast('Cannot delete last truck', 'error');
+  showConfirmDialog('Delete Truck?', 'Are you sure?', () => {
+    TRUCKS = TRUCKS.filter(x => x.id !== editingTruckId);
+    el('truckModalOverlay').classList.remove('open');
+    saveData();
+    buildTruckDropdown();
+    renderTruckList();
+    showToast('Truck deleted', 'success');
+  });
+}
+// ═══════════════════════════════════════════════════════════════
+// PRODUCT MODAL LOGIC
+// ═══════════════════════════════════════════════════════════════
+let editingProductName = null;
+function editGlobalProduct(p) {
+  editingProductName = p;
+  el('pm-name').value = p;
+  el('pm-color').value = PRODUCT_COLORS[p] || '#888888';
+  el('pm-conv').value = THEORETICAL_WEIGHTS[p] || 3000;
+  el('productModalOverlay').classList.add('open');
+}
+
+function saveProductEdit() {
+  const newName = el('pm-name').value.trim();
+  if(!newName) return showToast('Name is required','error');
+  
+  const oldName = editingProductName;
+  if(newName !== oldName && ALL_PRODUCTS.includes(newName)) return showToast('A product with this name already exists', 'error');
+
+  const color = el('pm-color').value;
+  const conv = parseFloat(el('pm-conv').value) || 3000;
+
+  if(newName !== oldName) {
+    const idx = ALL_PRODUCTS.indexOf(oldName);
+    if(idx > -1) ALL_PRODUCTS[idx] = newName;
+    PRODUCT_COLORS[newName] = color;
+    delete PRODUCT_COLORS[oldName];
+    THEORETICAL_WEIGHTS[newName] = conv;
+    delete THEORETICAL_WEIGHTS[oldName];
+    
+    // Cascade to VENDORS mapping
+    VENDORS.forEach(v => {
+      const pIdx = v.products.indexOf(oldName);
+      if(pIdx > -1) {
+        v.products[pIdx] = newName;
+        v.prices[newName] = v.prices[oldName];
+        delete v.prices[oldName];
+      }
+    });
+  } else {
+    PRODUCT_COLORS[newName] = color;
+    THEORETICAL_WEIGHTS[newName] = conv;
+  }
+
+  el('productModalOverlay').classList.remove('open');
+  renderProductManager();
+  buildProductDropdown();
+  buildBrowseFilters();
+  buildCompareDropdown();
+  saveData();
+  showToast('✓ Product updated', 'success');
+}
+</script>
+
+<div class="modal-overlay" id="productModalOverlay">
+  <div class="modal" style="width:340px">
+    <div class="modal-head">
+      <div class="modal-title">Edit Product</div>
+      <button class="modal-close" onclick="el('productModalOverlay').classList.remove('open')">✕</button>
+    </div>
+    <div class="modal-body" style="padding-bottom:12px">
+      <div class="field"><label>Product Name</label><input type="text" id="pm-name" /></div>
+      <div class="row2">
+        <div class="field"><label>Color</label><input type="color" id="pm-color" style="height:35px;padding:0;width:100%;border:none;background:transparent;cursor:pointer" /></div>
+        <div class="field"><label>Theo Weight (lbs/yd)</label><input type="number" id="pm-conv" step="10" /></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn ghost sm" onclick="el('productModalOverlay').classList.remove('open')" style="flex:1">Cancel</button>
+      <button class="btn sm" onclick="saveProductEdit()" style="flex:2">✓ Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="truckModalOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title" id="tm-title">Edit Truck</div>
+      <button class="modal-close" onclick="el('truckModalOverlay').classList.remove('open')">✕</button>
+    </div>
+      <div class="modal-body">
+        <div class="field"><label>Truck Name</label><input type="text" id="tm-name" placeholder="e.g. Medium Truck" /></div>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:12px;">
+          <div class="field"><label style="font-size:9px">Min Tons (Floor)</label><input type="number" id="tm-min" step="0.01" placeholder="14.1"/></div>
+          <div class="field"><label style="font-size:9px">Max Tons (Limit)</label><input type="number" id="tm-max" step="0.01" placeholder="16"/></div>
+          <div class="field"><label style="font-size:9px">NP Surcharge ($)</label><input type="number" id="tm-np" value="50"/></div>
+        </div>
+      <div>
+        <div class="section-label">Freight Tiers</div>
+        <div id="tm-freight-list" style="display:flex;flex-direction:column;gap:5px;margin-bottom:8px"></div>
+        <button class="btn ghost sm" onclick="addTruckFreightRow()" style="width:100%">+ Add Tier</button>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn danger sm" id="tm-del" onclick="deleteTruck()" style="display:none">🗑 Delete</button>
+      <button class="btn ghost sm" onclick="el('truckModalOverlay').classList.remove('open')" style="flex:1">Cancel</button>
+      <button class="btn sm" onclick="saveTruck()" style="flex:2">✓ Save</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>
