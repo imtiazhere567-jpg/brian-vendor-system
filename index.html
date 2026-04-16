@@ -1685,7 +1685,7 @@ function renderTruckList(){
   TRUCKS.forEach(t => {
     const minT = parseFloat(t.minTons) || 0;
     const maxT = parseFloat(t.maxTons) || 16;
-    const med = Math.ceil((minT + maxT) / 2);
+    const med = Math.round((minT + maxT) / 2);
     const d = document.createElement('div');
     d.className = 'vm-card vc'; 
     d.style.padding = '10px';
@@ -1822,7 +1822,7 @@ function getTruckMedian(truckType){
   if(!t) return 16;
   const min = parseFloat(t.minTons) || 0;
   const max = parseFloat(t.maxTons) || 16;
-  return Math.ceil((min + max) / 2);
+  return Math.round((min + max) / 2);
 }
 function calcQuote(matCost,miles,custTons,truckType,nonPlant,taxFree,marginPct){
   const maxCap = getTruckMaxCap(truckType);
