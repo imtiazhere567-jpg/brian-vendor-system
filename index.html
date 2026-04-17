@@ -1332,7 +1332,74 @@ function viewSavedQuote(id) {
     if(card.id !== `saved-card-${id}`) card.classList.remove('expanded');
   });
 
+  const isExpanding = !elCard.classList.contains('expanded');
   elCard.classList.toggle('expanded');
+
+  if (isExpanding) {
+    if (q.jobLat && q.jobLng && q.vendorId) {
+      showSavedRoute(q);
+    } else {
+      showToast('Map data unavailable for this older quote.', 'info');
+    }
+  }
+}
+
+function showSavedRoute(q) {
+  // Clear map
+  clearMarkers();
+  clearDirections();
+
+  // Find the exact vendor from MASTER list (to get fresh coords)
+  const v = VENDORS.find(x => x.id === q.vendorId);
+  if (!v) {
+    showToast('Vendor no longer exists.', 'error');
+    return;
+  }
+
+  // Add Job Site and Vendor Markers
+  const jobPos = { lat: q.jobLat, lng: q.jobLng };
+  const vendorPos = { lat: v.lat, lng: v.lng };
+
+  const jobMarker = new google.maps.Marker({
+    position: jobPos,
+    map,
+    icon: makeJobGoogleIcon(),
+    title: 'Job Site'
+  });
+  
+  const vendorMarker = new google.maps.Marker({
+    position: vendorPos,
+    map,
+    icon: makeGoogleIcon(v.color, v.icon),
+    title: v.name
+  });
+
+  leafletMarkers.push({ m: jobMarker, id: 'archived-job' });
+  leafletMarkers.push({ m: vendorMarker, id: v.id });
+
+  // Draw Route
+  const dirService = new google.maps.DirectionsService();
+  const renderer = new google.maps.DirectionsRenderer({
+    map,
+    suppressMarkers: true,
+    polylineOptions: { strokeColor: v.color || '#d48a18', strokeWeight: 6, strokeOpacity: 0.8 }
+  });
+  dirRenderers.push(renderer);
+
+  dirService.route({
+    origin: jobPos,
+    destination: vendorPos,
+    travelMode: google.maps.TravelMode.DRIVING
+  }, (result, status) => {
+    if (status === 'OK') {
+      renderer.setDirections(result);
+      // Fit bounds to show the whole route
+      const bounds = new google.maps.LatLngBounds();
+      bounds.extend(jobPos);
+      bounds.extend(vendorPos);
+      map.fitBounds(bounds);
+    }
+  });
 }
 
 function reprintSavedQuote(id) {
@@ -2545,12 +2612,15 @@ function confirmEditQuote() {
     email: editedEmail,
     phone: editedPhone,
     address: editedAddr,
+    jobLat: r.jobLat,
+    jobLng: r.jobLng,
     product: editedProd,
     tons: editedQty,
     truckType: r.truckType,
     marginPct: r.marginPct,
     nonPlant: r.nonPlant,
     taxFree: calc.taxFree,
+    vendorId: v.id,
     vendorName: v.name,
     vendorAddr: v.address,
     distance: v.distance,
