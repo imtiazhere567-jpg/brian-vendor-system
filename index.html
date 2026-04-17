@@ -1708,9 +1708,9 @@ function renderTruckList(){
       <div class="vc-actions" style="display:flex;align-items:center;gap:12px;">
         <button class="btn ghost sm" onclick="openTruckModal('${t.id}')" style="flex:1">✏️ Edit Details</button>
         <div style="display:flex;align-items:center;gap:8px;padding:4px 8px;background:var(--surface2);border-radius:6px;border:1px solid var(--border)">
-          <span style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.02em">Auto-Select</span>
+          <span style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.02em">Exclude Truck</span>
           <label class="toggle" style="transform:scale(0.85);transform-origin:right center;">
-            <input type="checkbox" ${t.excluded ? '' : 'checked'} onchange="toggleTruckExclusion('${t.id}', !this.checked)">
+            <input type="checkbox" ${t.excluded ? 'checked' : ''} onchange="toggleTruckExclusion('${t.id}', this.checked)">
             <span class="toggle-slider"></span>
           </label>
         </div>
@@ -2706,7 +2706,7 @@ function saveProductEdit() {
       <div class="modal-body">
         <div class="field"><label>Truck Name</label><input type="text" id="tm-name" placeholder="e.g. Medium Truck" /></div>
         <div class="toggle-row" style="margin-bottom:12px;">
-          <div class="toggle-label">Exclude from Auto-Select<small>Truck will be skipped by the "Calculate" engine but remains available manually.</small></div>
+          <div class="toggle-label">Exclude Truck from Auto-Select<small>When checked, this truck will be skipped during calculations.</small></div>
           <label class="toggle"><input type="checkbox" id="tm-exclude"><span class="toggle-slider"></span></label>
         </div>
         <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:12px;">
