@@ -1274,7 +1274,8 @@ function renderSavedQuotes() {
             💰 <span style="color:var(--accent);font-weight:700">$${q.calculation.total.toFixed(2)}</span> ($${q.calculation.perTon.toFixed(2)}/u)
           </div>
           <div class="vqc-actions" style="margin-top:8px; border-top:1px solid var(--border); padding:8px 0 0; display:flex; gap:6px;">
-            <button class="btn sm" onclick="event.stopPropagation();reprintSavedQuote('${q.id}')" style="flex:1;font-size:9px">📄 Open Professional Quote</button>
+            <button class="btn sm" onclick="event.stopPropagation();reprintSavedQuote('${q.id}')" style="flex:1;font-size:9px">📄 Professional Quote</button>
+            <button class="btn sm" onclick="event.stopPropagation();emailSavedQuote('${q.id}')" style="flex:1;font-size:9px;background:#3b82f6;color:#fff">📧 Email Quote</button>
             <button class="btn ghost sm" onclick="event.stopPropagation();deleteSavedQuote('${q.id}')" style="color:var(--red);border-color:rgba(239, 68, 68, 0.2); width:32px">🗑</button>
           </div>
         </div>
@@ -1540,6 +1541,42 @@ function reprintSavedQuote(id) {
 
   el('printQuote').innerHTML = html;
   window.print();
+}
+
+function emailSavedQuote(id) {
+  const q = SAVED_QUOTES.find(x => x.id === id);
+  if(!q) return;
+
+  const subject = encodeURIComponent(`Material Quote: ${q.id} - Houston Sand & Gravel`);
+  
+  const bodyItems = [
+    `Hello ${q.customer || 'Valued Customer'},`,
+    `Here is the material quote you requested from Houston Sand & Gravel.`,
+    ``,
+    `QUOTE DETAILS (${q.id})`,
+    `--------------------------`,
+    `Project Address: ${q.address}`,
+    `Material: ${q.product}`,
+    `Quantity: ${q.tons.toFixed(1)} Tons`,
+    `Rate per Ton: $${q.calculation.perTon.toFixed(2)}`,
+    `Total Amount: $${q.calculation.total.toFixed(2)}`,
+    `Status: ${q.taxFree ? 'Tax-Exempt' : 'Sales Tax Included'}`,
+    ``,
+    `LOGISTICS`,
+    `--------------------------`,
+    `Vendor: ${q.vendorName}`,
+    `Distance: ${q.distance.toFixed(1)} miles`,
+    ``,
+    `If you have any questions or would like to proceed with this order, please reply to this email or call us at (713) 555-0123.`,
+    ``,
+    `Thank you,`,
+    `Houston Sand & Gravel Team`
+  ];
+
+  const body = encodeURIComponent(bodyItems.join('\r\n'));
+  const mailtoUrl = `mailto:${q.email || ''}?subject=${subject}&body=${body}`;
+  
+  window.location.href = mailtoUrl;
 }
 
 
