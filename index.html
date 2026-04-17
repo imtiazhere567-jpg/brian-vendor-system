@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -422,7 +422,7 @@ input[type="color"]{width:24px;height:24px;border-radius:50%;border:2px solid va
   <div class="header-right">
     <div class="legend" id="headerLegend"></div>
     <button class="theme-toggle" id="trafficBtn" onclick="toggleTraffic()" title="Toggle Traffic Layer" style="color:var(--muted)">🚦</button>
-    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn" title="Toggle light/dark mode">🌙</button>
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn" title="Toggle light/dark mode">☀️</button>
   </div>
 </header>
 
@@ -1060,10 +1060,14 @@ function initFromStorage(){
       if(s.tax) el('s-tax').value = s.tax;
     },50);
   }
-  if(d.theme === 'light'){
+  if(d.theme === 'light' || (!d.theme && isLight)){
     isLight = true;
     document.documentElement.classList.add('light');
-    document.getElementById('themeBtn').textContent = '☀️';
+    if(el('themeBtn')) el('themeBtn').textContent = '☀️';
+  } else if(d.theme === 'dark') {
+    isLight = false;
+    document.documentElement.classList.remove('light');
+    if(el('themeBtn')) el('themeBtn').textContent = '🌙';
   }
   return true;
 }
@@ -1088,7 +1092,7 @@ let activeFilter='all', selectedId=null, jobMarker=null;
 let editingVendorId=null, pendingLatLng=null, placingMode=false;
 let selectedColor=VENDOR_COLORS[0], selectedIcon=ICONS[0];
 let modalProducts={};
-let isLight = false;
+let isLight = true;
 let lastQuoteResults = null; // store for PDF export & history
 
 // Helpers
@@ -1630,7 +1634,7 @@ function autoSelectTruck(tons) {
   if(!tons || tons <= 0) return;
   
   // Strategy 1: Find the "Perfect Fit" (Tons falls within the truck's Min-Max range)
-  let perfectFit = TRUCKS.find(t => tons >= parseFloat(t.minTons) && tons <= parseFloat(t.maxTons));
+  let perfectFit = TRUCKS.find(t => !t.excluded && tons >= parseFloat(t.minTons) && tons <= parseFloat(t.maxTons));
   
   if(perfectFit) {
     const s = el('q-truck');
@@ -1642,7 +1646,7 @@ function autoSelectTruck(tons) {
   let bestTruck = TRUCKS[0];
   let minTrips = Infinity;
 
-  TRUCKS.forEach(t => {
+  TRUCKS.filter(t => !t.excluded).forEach(t => {
     const maxT = parseFloat(t.maxTons) || 16;
     const trips = Math.ceil(tons / maxT);
     
@@ -1698,6 +1702,7 @@ function renderTruckList(){
         <div style="font-weight:700;font-size:12px">${t.name}</div>
         <div style="font-size:10px;color:var(--muted);font-family:var(--mono);">
           Range: ${minT}–${maxT}t · <b style="color:var(--accent)">Median: ${med}t</b>
+          ${t.excluded ? '<span style="display:inline-block;margin-left:8px;padding:1px 6px;background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);border-radius:4px;font-size:9px;font-weight:700;">EXCLUDED</span>' : ''}
         </div>
       </div>
       <div class="vc-actions">
@@ -2121,7 +2126,7 @@ function renderHistory(){
       <div class="hc-winner">Winner: <b>${h.winner}</b> at <b>$${h.winnerPerTon?.toFixed(2)||'—'}/ton</b> (${h.vendorCount} vendors compared)</div>
       <div class="header-actions">
       <button class="top-btn" id="trafficBtn" onclick="toggleTraffic()" title="Toggle Traffic Layer" style="color:var(--muted)">🚦 Traffic</button>
-      <button class="top-btn" id="themeBtn" onclick="toggleTheme()" title="Toggle Theme">🌙</button>
+      <button class="top-btn" id="themeBtn" onclick="toggleTheme()" title="Toggle Theme">☀️</button>
         <button class="btn danger sm" onclick="deleteHistory(${h.id})" style="width:auto">🗑</button>
       </div>`;
     c.appendChild(d);
@@ -2512,6 +2517,7 @@ function openTruckModal(id = null) {
     el('tm-min').value = t.minTons || 0;
     el('tm-max').value = t.maxTons || 16;
     el('tm-np').value = t.npFee;
+    el('tm-exclude').checked = !!t.excluded;
     editingTruckFreight = JSON.parse(JSON.stringify(t.freight || []));
     el('tm-del').style.display = 'block';
   } else {
@@ -2520,6 +2526,7 @@ function openTruckModal(id = null) {
     el('tm-min').value = 14;
     el('tm-max').value = 16;
     el('tm-np').value = 50;
+    el('tm-exclude').checked = false;
     editingTruckFreight = [{label:"0–10",maxMiles:10,fee:100}];
     el('tm-del').style.display = 'none';
   }
@@ -2564,6 +2571,7 @@ function saveTruck() {
       t.minTons = parseFloat(el('tm-min').value) || 0;
       t.maxTons = parseFloat(el('tm-max').value) || 0;
       t.npFee = parseFloat(el('tm-np').value) || 0;
+      t.excluded = el('tm-exclude').checked;
       t.freight = JSON.parse(JSON.stringify(editingTruckFreight));
     }
   } else { // new
@@ -2574,6 +2582,7 @@ function saveTruck() {
       minTons: parseFloat(el('tm-min').value)||0,
       maxTons: parseFloat(el('tm-max').value)||0,
       npFee: parseFloat(el('tm-np').value)||0, 
+      excluded: el('tm-exclude').checked,
       freight: JSON.parse(JSON.stringify(editingTruckFreight))
     });
   }
@@ -2678,6 +2687,10 @@ function saveProductEdit() {
     </div>
       <div class="modal-body">
         <div class="field"><label>Truck Name</label><input type="text" id="tm-name" placeholder="e.g. Medium Truck" /></div>
+        <div class="toggle-row" style="margin-bottom:12px;">
+          <div class="toggle-label">Exclude from Auto-Select<small>Truck will be skipped by the "Calculate" engine but remains available manually.</small></div>
+          <label class="toggle"><input type="checkbox" id="tm-exclude"><span class="toggle-slider"></span></label>
+        </div>
         <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:12px;">
           <div class="field"><label style="font-size:9px">Min Tons (Floor)</label><input type="number" id="tm-min" step="0.01" placeholder="14.1"/></div>
           <div class="field"><label style="font-size:9px">Max Tons (Limit)</label><input type="number" id="tm-max" step="0.01" placeholder="16"/></div>
