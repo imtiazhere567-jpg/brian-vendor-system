@@ -1336,14 +1336,30 @@ function viewSavedQuote(id) {
   elCard.classList.toggle('expanded');
 
   if (isExpanding) {
-    // Robust check for required map data
-    const hasMapData = q.jobLat != null && q.jobLng != null && q.vendorId != null;
-    
-    if (hasMapData) {
+    // 1. Check if we already have coordinates
+    if (q.jobLat != null && q.jobLng != null && q.vendorId != null && q.jobLat !== 0) {
       showSavedRoute(q);
-    } else {
-      console.warn("Missing map data for quote:", q);
-      showToast('Map data unavailable for this older quote.', 'info');
+    } 
+    // 2. If data is missing but we have an address, try to recover (Geocode on the fly)
+    else if (q.address && q.vendorId != null) {
+      console.log("Attempting to recover coordinates for saved quote...");
+      if(!geocoder) geocoder = new google.maps.Geocoder();
+      
+      geocoder.geocode({ address: q.address }, (results, status) => {
+        if (status === 'OK' && results[0]) {
+          const loc = results[0].geometry.location;
+          q.jobLat = loc.lat();
+          q.jobLng = loc.lng();
+          // Persist the recovered data so we don't have to geocode again
+          saveData(); 
+          showSavedRoute(q);
+        } else {
+          showToast('Could not locate address on map.', 'error');
+        }
+      });
+    }
+    else {
+      showToast('Map data unavailable for this record.', 'info');
     }
   }
 }
