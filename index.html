@@ -1705,13 +1705,31 @@ function renderTruckList(){
           ${t.excluded ? '<span style="display:inline-block;margin-left:8px;padding:1px 6px;background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);border-radius:4px;font-size:9px;font-weight:700;">EXCLUDED</span>' : ''}
         </div>
       </div>
-      <div class="vc-actions">
-        <button class="btn ghost sm" onclick="openTruckModal('${t.id}')" style="flex:1">✏️ Edit Details & Freight</button>
+      <div class="vc-actions" style="display:flex;align-items:center;gap:12px;">
+        <button class="btn ghost sm" onclick="openTruckModal('${t.id}')" style="flex:1">✏️ Edit Details</button>
+        <div style="display:flex;align-items:center;gap:8px;padding:4px 8px;background:var(--surface2);border-radius:6px;border:1px solid var(--border)">
+          <span style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.02em">Auto-Select</span>
+          <label class="toggle" style="transform:scale(0.85);transform-origin:right center;">
+            <input type="checkbox" ${t.excluded ? '' : 'checked'} onchange="toggleTruckExclusion('${t.id}', !this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
       </div>
     `;
     c.appendChild(d);
   });
 }
+function toggleTruckExclusion(id, isExcluded) {
+  const t = TRUCKS.find(x => x.id === id);
+  if (t) {
+    t.excluded = isExcluded;
+    saveData();
+    renderTruckList();
+    buildTruckDropdown();
+    showToast(t.name + (isExcluded ? ' excluded from auto-select' : ' enabled for auto-select'), 'success');
+  }
+}
+
 
 function renderModalProducts(){
   const c=el('modalProductList');c.innerHTML='';
