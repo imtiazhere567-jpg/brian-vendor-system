@@ -1336,53 +1336,67 @@ function viewSavedQuote(id) {
   elCard.classList.toggle('expanded');
 
   if (isExpanding) {
-    if (q.jobLat && q.jobLng && q.vendorId) {
+    // Robust check for required map data
+    const hasMapData = q.jobLat != null && q.jobLng != null && q.vendorId != null;
+    
+    if (hasMapData) {
       showSavedRoute(q);
     } else {
+      console.warn("Missing map data for quote:", q);
       showToast('Map data unavailable for this older quote.', 'info');
     }
   }
 }
 
 function showSavedRoute(q) {
-  // Clear map
+  // 1. Clear EVERYTHING from the map first
   clearMarkers();
   clearDirections();
+  if (jobMarker) { jobMarker.setMap(null); jobMarker = null; }
+  if (infoWindow) infoWindow.close();
 
-  // Find the exact vendor from MASTER list (to get fresh coords)
-  const v = VENDORS.find(x => x.id === q.vendorId);
+  // 2. Find the vendor (use loose equality for ID safety)
+  const v = VENDORS.find(x => String(x.id) === String(q.vendorId));
   if (!v) {
-    showToast('Vendor no longer exists.', 'error');
+    showToast('Vendor information not found.', 'error');
     return;
   }
 
-  // Add Job Site and Vendor Markers
-  const jobPos = { lat: q.jobLat, lng: q.jobLng };
-  const vendorPos = { lat: v.lat, lng: v.lng };
+  // 3. Set up the new markers
+  const jobPos = { lat: Number(q.jobLat), lng: Number(q.jobLng) };
+  const vendorPos = { lat: Number(v.lat), lng: Number(v.lng) };
 
-  const jobMarker = new google.maps.Marker({
+  // Create local job marker for this view
+  jobMarker = new google.maps.Marker({
     position: jobPos,
     map,
     icon: makeJobGoogleIcon(),
-    title: 'Job Site'
+    title: 'Job Site',
+    zIndex: 1000
   });
   
   const vendorMarker = new google.maps.Marker({
     position: vendorPos,
     map,
     icon: makeGoogleIcon(v.color, v.icon),
-    title: v.name
+    title: v.name,
+    zIndex: 999
   });
 
   leafletMarkers.push({ m: jobMarker, id: 'archived-job' });
   leafletMarkers.push({ m: vendorMarker, id: v.id });
 
-  // Draw Route
+  // 4. Draw the specific route
   const dirService = new google.maps.DirectionsService();
   const renderer = new google.maps.DirectionsRenderer({
     map,
     suppressMarkers: true,
-    polylineOptions: { strokeColor: v.color || '#d48a18', strokeWeight: 6, strokeOpacity: 0.8 }
+    preserveViewport: false, // We want it to zoom
+    polylineOptions: { 
+      strokeColor: v.color || '#d48a18', 
+      strokeWeight: 6, 
+      strokeOpacity: 0.8 
+    }
   });
   dirRenderers.push(renderer);
 
@@ -1393,11 +1407,13 @@ function showSavedRoute(q) {
   }, (result, status) => {
     if (status === 'OK') {
       renderer.setDirections(result);
-      // Fit bounds to show the whole route
+      // Ensure the map captures both points
       const bounds = new google.maps.LatLngBounds();
       bounds.extend(jobPos);
       bounds.extend(vendorPos);
       map.fitBounds(bounds);
+    } else {
+      showToast('Could not calculate route for this location.', 'error');
     }
   });
 }
@@ -1619,7 +1635,11 @@ function addMarkers(list){
     leafletMarkers.push({id:v.id,m:marker});
   });
 }
-function clearMarkers(){leafletMarkers.forEach(x=>x.m.setMap(null));leafletMarkers=[];}
+function clearMarkers(){
+  if(jobMarker) { jobMarker.setMap(null); jobMarker = null; }
+  leafletMarkers.forEach(x=>x.m.setMap(null));
+  leafletMarkers=[];
+}
 function clearLines(){polyLines.forEach(l=>l.setMap(null));polyLines=[];}
 function clearDirections(){
   dirRenderers.forEach(r=>r.setMap(null));
@@ -2612,8 +2632,8 @@ function confirmEditQuote() {
     email: editedEmail,
     phone: editedPhone,
     address: editedAddr,
-    jobLat: r.jobLat,
-    jobLng: r.jobLng,
+    jobLat: r.jobLat || 0,
+    jobLng: r.jobLng || 0,
     product: editedProd,
     tons: editedQty,
     truckType: r.truckType,
