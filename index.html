@@ -2391,7 +2391,37 @@ function confirmEditQuote() {
         </div>
       </div>
     </div>`;
+  
+  // 💾 AUTO-SAVE Quote to Saved Tab
+  const saveId = `SQ-${nextSavedId++}`;
+  const saveRecord = {
+    id: saveId,
+    timestamp: Date.now(),
+    customer: editedCust,
+    company: editedCompany,
+    email: editedEmail,
+    phone: editedPhone,
+    address: editedAddr,
+    product: editedProd,
+    tons: editedQty,
+    truckType: r.truckType,
+    marginPct: r.marginPct,
+    nonPlant: r.nonPlant,
+    taxFree: calc.taxFree,
+    vendorName: v.name,
+    vendorAddr: v.address,
+    distance: v.distance,
+    calculation: {
+      total: editedTotal,
+      perTon: editedRate
+    }
+  };
+  SAVED_QUOTES.unshift(saveRecord);
+  saveData();
+  renderSavedQuotes();
+  showToast(`✓ Quote ${saveId} Auto-Archived`,'success');
 
+  // Display for Print
   el('printQuote').innerHTML = html;
   closeEditModal();
   window.print();
