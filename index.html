@@ -1336,13 +1336,19 @@ function viewSavedQuote(id) {
   elCard.classList.toggle('expanded');
 
   if (isExpanding) {
-    // 1. Check if we already have coordinates
-    if (q.jobLat != null && q.jobLng != null && q.vendorId != null && q.jobLat !== 0) {
+    // DEBUG: Log contents to help identify what's missing
+    console.log("Viewing Saved Quote:", q);
+    
+    // Check for required data
+    const hasCoords = q.jobLat && q.jobLat !== 0;
+    const hasVendor = q.vendorId != null;
+
+    if (hasCoords && hasVendor) {
       showSavedRoute(q);
     } 
-    // 2. If data is missing but we have an address, try to recover (Geocode on the fly)
-    else if (q.address && q.vendorId != null) {
-      console.log("Attempting to recover coordinates for saved quote...");
+    // Attempt recovery if address exists
+    else if (q.address) {
+      console.log("Attempting geocoding recovery for:", q.address);
       if(!geocoder) geocoder = new google.maps.Geocoder();
       
       geocoder.geocode({ address: q.address }, (results, status) => {
@@ -1350,69 +1356,72 @@ function viewSavedQuote(id) {
           const loc = results[0].geometry.location;
           q.jobLat = loc.lat();
           q.jobLng = loc.lng();
-          // Persist the recovered data so we don't have to geocode again
+          // If vendorId is missing, try to find by name
+          if (!q.vendorId && q.vendorName) {
+            const vMatch = VENDORS.find(v => v.name === q.vendorName);
+            if (vMatch) q.vendorId = vMatch.id;
+          }
           saveData(); 
-          showSavedRoute(q);
+          if (q.jobLat && q.vendorId) {
+            showSavedRoute(q);
+          } else {
+            showToast('Missing vital vendor ID for map drawing.', 'error');
+          }
         } else {
-          showToast('Could not locate address on map.', 'error');
+          showToast('Could not find location: ' + status, 'error');
         }
       });
     }
     else {
-      showToast('Map data unavailable for this record.', 'info');
+      showToast('Error: No address or coordinates for this quote.', 'error');
     }
   }
 }
 
+// Global to track routing requests
+let activeRoutingRequest = 0;
+
 function showSavedRoute(q) {
-  // 1. Clear EVERYTHING from the map first
+  const reqId = ++activeRoutingRequest;
+  
+  // 1. Clear EVERYTHING
   clearMarkers();
   clearDirections();
   if (jobMarker) { jobMarker.setMap(null); jobMarker = null; }
-  if (infoWindow) infoWindow.close();
 
-  // 2. Find the vendor (use loose equality for ID safety)
   const v = VENDORS.find(x => String(x.id) === String(q.vendorId));
   if (!v) {
-    showToast('Vendor information not found.', 'error');
+    showToast('Vendor no longer exists in system.', 'error');
     return;
   }
 
-  // 3. Set up the new markers
   const jobPos = { lat: Number(q.jobLat), lng: Number(q.jobLng) };
   const vendorPos = { lat: Number(v.lat), lng: Number(v.lng) };
 
-  // Create local job marker for this view
+  // 2. Add specific markers for this route
   jobMarker = new google.maps.Marker({
     position: jobPos,
     map,
     icon: makeJobGoogleIcon(),
-    title: 'Job Site',
     zIndex: 1000
   });
-  
-  const vendorMarker = new google.maps.Marker({
+
+  const vMarker = new google.maps.Marker({
     position: vendorPos,
     map,
     icon: makeGoogleIcon(v.color, v.icon),
-    title: v.name,
     zIndex: 999
   });
-
   leafletMarkers.push({ m: jobMarker, id: 'archived-job' });
-  leafletMarkers.push({ m: vendorMarker, id: v.id });
+  leafletMarkers.push({ m: vMarker, id: v.id });
 
-  // 4. Draw the specific route
+  // 3. Draw Route
   const dirService = new google.maps.DirectionsService();
   const renderer = new google.maps.DirectionsRenderer({
     map,
     suppressMarkers: true,
-    preserveViewport: false, // We want it to zoom
-    polylineOptions: { 
-      strokeColor: v.color || '#d48a18', 
-      strokeWeight: 6, 
-      strokeOpacity: 0.8 
-    }
+    preserveViewport: false,
+    polylineOptions: { strokeColor: v.color || '#d48a18', strokeWeight: 6, strokeOpacity: 0.8 }
   });
   dirRenderers.push(renderer);
 
@@ -1421,15 +1430,15 @@ function showSavedRoute(q) {
     destination: vendorPos,
     travelMode: google.maps.TravelMode.DRIVING
   }, (result, status) => {
+    // Optimization: Ignore if another request started
+    if (reqId !== activeRoutingRequest) return;
+    
     if (status === 'OK') {
       renderer.setDirections(result);
-      // Ensure the map captures both points
       const bounds = new google.maps.LatLngBounds();
       bounds.extend(jobPos);
       bounds.extend(vendorPos);
       map.fitBounds(bounds);
-    } else {
-      showToast('Could not calculate route for this location.', 'error');
     }
   });
 }
@@ -2648,8 +2657,8 @@ function confirmEditQuote() {
     email: editedEmail,
     phone: editedPhone,
     address: editedAddr,
-    jobLat: r.jobLat || 0,
-    jobLng: r.jobLng || 0,
+    jobLat: currentEditParams.r.jobLat || parseFloat(el('q-address').dataset.lat) || 0,
+    jobLng: currentEditParams.r.jobLng || parseFloat(el('q-address').dataset.lng) || 0,
     product: editedProd,
     tons: editedQty,
     truckType: r.truckType,
